@@ -20,7 +20,7 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { getAllProducts, getAllCategories } from "../api/productApi";
 import { useCart } from "../pages/CartContext";
 
-const BACKEND_BASE_URL = "http://localhost:5000";
+const BACKEND_BASE_URL = "https://arch-hub-server.onrender.com";
 
 const HomePage = () => {
 	const [products, setProducts] = useState([]);

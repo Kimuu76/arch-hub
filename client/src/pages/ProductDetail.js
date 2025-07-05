@@ -19,7 +19,7 @@ function ProductDetail() {
 	return (
 		<Box sx={{ p: 4 }}>
 			<img
-				src={`http://localhost:5000${product.image}`}
+				src={`https://arch-hub-server.onrender.com${product.image}`}
 				alt={product.title}
 				style={{ width: "100%", maxWidth: "600px", marginBottom: "20px" }}
 			/>
