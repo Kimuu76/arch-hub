@@ -23,7 +23,7 @@ import ShoppingCartCheckoutIcon from "@mui/icons-material/ShoppingCartCheckout";
 import { useCart } from "../pages/CartContext";
 import { Link } from "react-router-dom";
 
-const BACKEND_BASE_URL = "http://localhost:5000";
+const BACKEND_BASE_URL = "https://arch-hub-server.onrender.com";
 
 const CartPage = () => {
 	const { cart, dispatch } = useCart();
