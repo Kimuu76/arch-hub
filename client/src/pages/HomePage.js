@@ -91,7 +91,20 @@ const HomePage = () => {
 			</Box>*/}
 
 			<Typography variant='h4' fontWeight={700} gutterBottom textAlign='center'>
-				Explore Our Architectural Products
+				Explore Our Arch
+				<span style={{ textDecoration: "none" }}>
+					<Link
+						to='/login'
+						style={{
+							color: "inherit",
+							textDecoration: "none",
+							cursor: "pointer",
+						}}
+					>
+						i
+					</Link>
+				</span>
+				tectural Products
 			</Typography>
 
 			<FormControl sx={{ mb: 4, minWidth: 250 }}>
