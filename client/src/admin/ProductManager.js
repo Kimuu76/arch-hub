@@ -227,7 +227,7 @@ const ProductManager = () => {
 									<TableRow key={product.id}>
 										<TableCell>
 											<img
-												src={`http://localhost:5000${product.image}`}
+												src={`https://arch-hub-server.onrender.com${product.image}`}
 												alt={product.title}
 												width={60}
 												style={{ borderRadius: 4 }}
@@ -236,7 +236,7 @@ const ProductManager = () => {
 										<TableCell>
 											{product.plan_file ? (
 												<a
-													href={`http://localhost:5000${product.plan_file}`}
+													href={`https://arch-hub-server.onrender.com${product.plan_file}`}
 													target='_blank'
 													rel='noreferrer'
 												>

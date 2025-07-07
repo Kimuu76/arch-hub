@@ -26,26 +26,34 @@ const HomePage = () => {
 	const [products, setProducts] = useState([]);
 	const [categories, setCategories] = useState([]);
 	const [filter, setFilter] = useState("");
+	const [bedroomFilter, setBedroomFilter] = useState("");
+	const [budgetFilter, setBudgetFilter] = useState("");
 
 	const { cart } = useCart();
-
 	const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
 	useEffect(() => {
 		const fetchData = async () => {
 			const cats = await getAllCategories();
 			setCategories(cats);
-
 			const prods = await getAllProducts();
 			setProducts(prods);
 		};
-
 		fetchData();
 	}, []);
 
-	const filtered = filter
-		? products.filter((p) => p.category_id === filter)
-		: products;
+	const filtered = products
+		.filter((p) => (filter ? p.category_id === filter : true))
+		.filter((p) =>
+			bedroomFilter ? p.bedrooms === parseInt(bedroomFilter) : true
+		)
+		.filter((p) => {
+			if (budgetFilter === "lt500k") return p.price < 500000;
+			if (budgetFilter === "500k-1m")
+				return p.price >= 500000 && p.price <= 1000000;
+			if (budgetFilter === "gt1m") return p.price > 1000000;
+			return true;
+		});
 
 	const selectedCategory = categories.find((c) => c.id === filter)?.name;
 
@@ -53,6 +61,7 @@ const HomePage = () => {
 		<Box
 			sx={{ px: { xs: 2, md: 6 }, py: { xs: 4, md: 6 }, bgcolor: "#f9f9f9" }}
 		>
+			{/* Cart Button */}
 			<Box display='flex' justifyContent='flex-end' mb={2}>
 				<Button
 					variant='contained'
@@ -69,7 +78,7 @@ const HomePage = () => {
 				</Button>
 			</Box>
 
-			{/* Hero Banner 
+			{/* Hero Banner (optional) */}
 			<Box
 				sx={{
 					mb: 6,
@@ -77,19 +86,18 @@ const HomePage = () => {
 					borderRadius: 3,
 					textAlign: "center",
 					color: "#fff",
-					backgroundImage: 'url("../assets/asset.jpg")',
-					backgroundSize: "cover",
-					backgroundPosition: "center",
+					background: "linear-gradient(to right, #1976d2, #0d47a1)",
 				}}
 			>
 				<Typography variant='h3' fontWeight={700}>
-					Affordable House Plans & Designs
+					Elevate Your Dream Home Design
 				</Typography>
 				<Typography variant='h6' sx={{ mt: 2 }}>
-					Ready-to-build architectural plans for all your needs
+					Explore customizable plans for bungalows, villas, maisonettes & more.
 				</Typography>
-			</Box>*/}
+			</Box>
 
+			{/* Page Title with hidden login link */}
 			<Typography variant='h4' fontWeight={700} gutterBottom textAlign='center'>
 				Explore Our Arch
 				<span style={{ textDecoration: "none" }}>
@@ -107,30 +115,74 @@ const HomePage = () => {
 				tectural Products
 			</Typography>
 
-			<FormControl sx={{ mb: 4, minWidth: 250 }}>
-				<InputLabel id='category-label'>Filter by Category</InputLabel>
-				<Select
-					labelId='category-label'
-					value={filter}
-					label='Filter by Category'
-					onChange={(e) => setFilter(e.target.value)}
-				>
-					<MenuItem value=''>All Categories</MenuItem>
-					{categories.map((cat) => (
-						<MenuItem key={cat.id} value={cat.id}>
-							{cat.name}
-						</MenuItem>
-					))}
-				</Select>
-			</FormControl>
+			{/* Services */}
+			<Box mt={3} mb={4} textAlign='center'>
+				<Typography variant='h5' fontWeight={600}>
+					Our Services
+				</Typography>
+				<Typography variant='body1' mt={1}>
+					We offer <strong>architectural</strong> and{" "}
+					<strong>structural plans</strong> in sqm or feet/inches, and{" "}
+					<strong>construction cost estimates</strong> tailored to your project.
+				</Typography>
+			</Box>
 
-			{/* Selected Category Label */}
+			{/* Filters */}
+			<Box display='flex' flexWrap='wrap' gap={2} mb={4}>
+				<FormControl sx={{ minWidth: 200 }}>
+					<InputLabel id='category-label'>Category</InputLabel>
+					<Select
+						labelId='category-label'
+						value={filter}
+						label='Category'
+						onChange={(e) => setFilter(e.target.value)}
+					>
+						<MenuItem value=''>All Categories</MenuItem>
+						{categories.map((cat) => (
+							<MenuItem key={cat.id} value={cat.id}>
+								{cat.name === "Massionettes" ? "Maisonettes" : cat.name}
+							</MenuItem>
+						))}
+					</Select>
+				</FormControl>
+
+				<FormControl sx={{ minWidth: 160 }}>
+					<InputLabel>Bedrooms</InputLabel>
+					<Select
+						value={bedroomFilter}
+						onChange={(e) => setBedroomFilter(e.target.value)}
+						label='Bedrooms'
+					>
+						<MenuItem value=''>All</MenuItem>
+						<MenuItem value={2}>2 Bedrooms</MenuItem>
+						<MenuItem value={3}>3 Bedrooms</MenuItem>
+						<MenuItem value={4}>4 Bedrooms</MenuItem>
+					</Select>
+				</FormControl>
+
+				<FormControl sx={{ minWidth: 180 }}>
+					<InputLabel>Budget</InputLabel>
+					<Select
+						value={budgetFilter}
+						onChange={(e) => setBudgetFilter(e.target.value)}
+						label='Budget'
+					>
+						<MenuItem value=''>All</MenuItem>
+						<MenuItem value='lt500k'>Below KES 500K</MenuItem>
+						<MenuItem value='500k-1m'>KES 500K - 1M</MenuItem>
+						<MenuItem value='gt1m'>Above KES 1M</MenuItem>
+					</Select>
+				</FormControl>
+			</Box>
+
+			{/* Selected Category Display */}
 			{filter && (
 				<Typography variant='subtitle1' sx={{ mb: 2 }}>
 					Showing: <strong>{selectedCategory}</strong>
 				</Typography>
 			)}
 
+			{/* Product Grid */}
 			<Grid container spacing={4}>
 				{filtered.map((product) => (
 					<Grid item xs={12} sm={6} md={4} lg={3} key={product.id}>
@@ -152,7 +204,6 @@ const HomePage = () => {
 								},
 							}}
 						>
-							{/* Product Image */}
 							<CardMedia
 								component='img'
 								height='200'
@@ -161,7 +212,6 @@ const HomePage = () => {
 								sx={{ objectFit: "cover" }}
 							/>
 
-							{/* Show INACTIVE label if needed */}
 							{product.status === "inactive" && (
 								<Box
 									sx={{
@@ -198,12 +248,11 @@ const HomePage = () => {
 								>
 									{product.description}
 								</Typography>
-
 								<Typography
 									variant='subtitle1'
 									sx={{ mt: 2, fontWeight: 700, color: "primary.main" }}
 								>
-									KES {product.price}
+									KES {product.price.toLocaleString()}
 								</Typography>
 							</CardContent>
 						</Card>

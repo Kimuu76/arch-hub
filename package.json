@@ -1,6 +1,7 @@
 {
 	"dependencies": {
-		"multer": "^2.0.1"
+		"multer": "^2.0.1",
+		"react-material-ui-carousel": "^3.4.2"
 	},
 	"scripts": {
 		"build": "react-scripts build"

@@ -10,6 +10,7 @@ import {
 	Typography,
 	Container,
 	InputAdornment,
+	CircularProgress,
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
@@ -21,20 +22,25 @@ import { jwtDecode } from "jwt-decode";
 export default function LoginPage() {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
+	const [loading, setLoading] = useState(false);
 	const { login } = useAuth();
 	const navigate = useNavigate();
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
+		setLoading(true);
+
 		try {
 			const res = await axios.post("/auth/login", { email, password });
 			login(res.data.token);
 
 			const { role } = res.data?.user || jwtDecode(res.data.token);
-			role === "admin" ? navigate("/admin") : navigate("/");
+			navigate(role === "admin" ? "/admin" : "/");
 		} catch (err) {
 			console.error("Login error:", err);
 			alert("Login failed. Please check your credentials.");
+		} finally {
+			setLoading(false);
 		}
 	};
 
@@ -72,6 +78,7 @@ export default function LoginPage() {
 								variant='outlined'
 								value={email}
 								onChange={(e) => setEmail(e.target.value)}
+								disabled={loading}
 								InputProps={{
 									startAdornment: (
 										<InputAdornment position='start'>
@@ -88,6 +95,7 @@ export default function LoginPage() {
 								variant='outlined'
 								value={password}
 								onChange={(e) => setPassword(e.target.value)}
+								disabled={loading}
 								InputProps={{
 									startAdornment: (
 										<InputAdornment position='start'>
@@ -103,8 +111,14 @@ export default function LoginPage() {
 								fullWidth
 								size='large'
 								sx={{ mt: 3, py: 1.5 }}
+								disabled={loading}
+								startIcon={
+									loading ? (
+										<CircularProgress size={22} color='inherit' />
+									) : null
+								}
 							>
-								Login
+								{loading ? "Logging in..." : "Login"}
 							</Button>
 						</form>
 					</CardContent>
@@ -116,7 +130,7 @@ export default function LoginPage() {
 					color='text.secondary'
 					sx={{ mt: 2 }}
 				>
-					© {new Date().getFullYear()} <strong>Developed by KevTech</strong>|
+					© {new Date().getFullYear()} <strong>Developed by KevTech</strong> |
 					Contact: +254712992577
 				</Typography>
 			</Container>
