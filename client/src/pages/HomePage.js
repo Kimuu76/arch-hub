@@ -1,6 +1,6 @@
 /** @format */
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import {
 	Grid,
 	Card,
@@ -14,13 +14,49 @@ import {
 	FormControl,
 	Button,
 	Badge,
+	TextField,
+	Skeleton,
+	useTheme,
+	Fab,
+	Zoom,
+	useScrollTrigger,
 } from "@mui/material";
 import { Link } from "react-router-dom";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import { Carousel } from "react-responsive-carousel";
+import "react-responsive-carousel/lib/styles/carousel.min.css";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { getAllProducts, getAllCategories } from "../api/productApi";
 import { useCart } from "../pages/CartContext";
 
 const BACKEND_BASE_URL = "https://arch-hub-server.onrender.com";
+const itemsPerLoad = 8;
+
+const ScrollTop = () => {
+	const trigger = useScrollTrigger({ threshold: 300 });
+	const handleClick = () => {
+		window.scrollTo({ top: 0, behavior: "smooth" });
+	};
+
+	return (
+		<Zoom in={trigger}>
+			<Box
+				onClick={handleClick}
+				role='presentation'
+				sx={{
+					position: "fixed",
+					bottom: 32,
+					right: 24,
+					zIndex: 1000,
+				}}
+			>
+				<Fab color='primary' size='small' aria-label='scroll back to top'>
+					<KeyboardArrowUpIcon />
+				</Fab>
+			</Box>
+		</Zoom>
+	);
+};
 
 const HomePage = () => {
 	const [products, setProducts] = useState([]);
@@ -28,18 +64,38 @@ const HomePage = () => {
 	const [filter, setFilter] = useState("");
 	const [bedroomFilter, setBedroomFilter] = useState("");
 	const [budgetFilter, setBudgetFilter] = useState("");
+	const [search, setSearch] = useState("");
+	const [visibleCount, setVisibleCount] = useState(itemsPerLoad);
+	const [loading, setLoading] = useState(true);
 
 	const { cart } = useCart();
+	const theme = useTheme();
 	const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+	const observerRef = useRef();
 
 	useEffect(() => {
 		const fetchData = async () => {
+			setLoading(true);
 			const cats = await getAllCategories();
-			setCategories(cats);
 			const prods = await getAllProducts();
+			setCategories(cats);
 			setProducts(prods);
+			setLoading(false);
 		};
 		fetchData();
+	}, []);
+
+	useEffect(() => {
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0].isIntersecting) {
+					setVisibleCount((prev) => prev + itemsPerLoad);
+				}
+			},
+			{ threshold: 1 }
+		);
+		if (observerRef.current) observer.observe(observerRef.current);
+		return () => observer.disconnect();
 	}, []);
 
 	const filtered = products
@@ -53,15 +109,28 @@ const HomePage = () => {
 				return p.price >= 500000 && p.price <= 1000000;
 			if (budgetFilter === "gt1m") return p.price > 1000000;
 			return true;
-		});
+		})
+		.filter((p) =>
+			search.trim()
+				? p.title?.toLowerCase().includes(search.toLowerCase())
+				: true
+		);
 
-	const selectedCategory = categories.find((c) => c.id === filter)?.name;
+	const visibleProducts = useMemo(
+		() => filtered.slice(0, visibleCount),
+		[filtered, visibleCount]
+	);
+
+	const featured = useMemo(() => {
+		return products
+			.filter((p) => p.status !== "inactive")
+			.sort(() => 0.5 - Math.random())
+			.slice(0, 5);
+	}, [products]);
 
 	return (
-		<Box
-			sx={{ px: { xs: 2, md: 6 }, py: { xs: 4, md: 6 }, bgcolor: "#f9f9f9" }}
-		>
-			{/* Cart Button */}
+		<Box sx={{ px: { xs: 2, md: 6 }, py: 4, bgcolor: "#f9f9f9" }}>
+			{/* Cart */}
 			<Box display='flex' justifyContent='flex-end' mb={2}>
 				<Button
 					variant='contained'
@@ -78,7 +147,39 @@ const HomePage = () => {
 				</Button>
 			</Box>
 
-			{/* Hero Banner (optional) */}
+			{/* Carousel */}
+			{featured.length > 0 && (
+				<Box sx={{ mb: 4 }}>
+					<Carousel
+						showThumbs={false}
+						autoPlay
+						infiniteLoop
+						showStatus={false}
+						showArrows
+					>
+						{featured.map((product) => (
+							<div key={product.id}>
+								<img
+									src={`${BACKEND_BASE_URL}${product.image}`}
+									alt={product.title}
+									style={{
+										height: 400,
+										objectFit: "cover",
+										width: "100%",
+									}}
+								/>
+								<p className='legend'>
+									<Link to={`/product/${product.id}`} style={{ color: "#fff" }}>
+										{product.title} – KES {product.price.toLocaleString()}
+									</Link>
+								</p>
+							</div>
+						))}
+					</Carousel>
+				</Box>
+			)}
+
+			{/* Banner */}
 			<Box
 				sx={{
 					mb: 6,
@@ -89,15 +190,14 @@ const HomePage = () => {
 					background: "linear-gradient(to right, #1976d2, #0d47a1)",
 				}}
 			>
-				<Typography variant='h3' fontWeight={700}>
+				<Typography variant='h4' fontWeight={700}>
 					Elevate Your Dream Home Design
 				</Typography>
-				<Typography variant='h6' sx={{ mt: 2 }}>
+				<Typography variant='body1' mt={1}>
 					Explore customizable plans for bungalows, villas, maisonettes & more.
 				</Typography>
 			</Box>
 
-			{/* Page Title with hidden login link */}
 			<Typography variant='h4' fontWeight={700} gutterBottom textAlign='center'>
 				Explore Our Arch
 				<span style={{ textDecoration: "none" }}>
@@ -115,38 +215,50 @@ const HomePage = () => {
 				tectural Products
 			</Typography>
 
-			{/* Services */}
-			<Box mt={3} mb={4} textAlign='center'>
-				<Typography variant='h5' fontWeight={600}>
-					Our Services
-				</Typography>
-				<Typography variant='body1' mt={1}>
-					We offer <strong>architectural</strong> and{" "}
-					<strong>structural plans</strong> in sqm or feet/inches, and{" "}
-					<strong>construction cost estimates</strong> tailored to your project.
-				</Typography>
-			</Box>
-
 			{/* Filters */}
-			<Box display='flex' flexWrap='wrap' gap={2} mb={4}>
-				<FormControl sx={{ minWidth: 200 }}>
-					<InputLabel id='category-label'>Category</InputLabel>
+			<Box
+				sx={{
+					position: "sticky",
+					top: 0,
+					zIndex: 1000,
+					bgcolor: theme.palette.background.paper,
+					p: 2,
+					boxShadow: 2,
+					borderRadius: 2,
+					mb: 4,
+				}}
+				display='flex'
+				flexWrap='wrap'
+				justifyContent='center'
+				gap={2}
+			>
+				<FormControl sx={{ minWidth: 180 }}>
+					<InputLabel>Category</InputLabel>
 					<Select
-						labelId='category-label'
 						value={filter}
 						label='Category'
 						onChange={(e) => setFilter(e.target.value)}
 					>
-						<MenuItem value=''>All Categories</MenuItem>
+						<MenuItem value=''>All</MenuItem>
 						{categories.map((cat) => (
 							<MenuItem key={cat.id} value={cat.id}>
-								{cat.name === "Massionettes" ? "Maisonettes" : cat.name}
+								{cat.name}
 							</MenuItem>
 						))}
 					</Select>
 				</FormControl>
 
-				<FormControl sx={{ minWidth: 160 }}>
+				<TextField
+					label='Search'
+					variant='outlined'
+					value={search}
+					onChange={(e) => {
+						setSearch(e.target.value);
+						setVisibleCount(itemsPerLoad);
+					}}
+				/>
+
+				<FormControl sx={{ minWidth: 140 }}>
 					<InputLabel>Bedrooms</InputLabel>
 					<Select
 						value={bedroomFilter}
@@ -160,7 +272,7 @@ const HomePage = () => {
 					</Select>
 				</FormControl>
 
-				<FormControl sx={{ minWidth: 180 }}>
+				<FormControl sx={{ minWidth: 160 }}>
 					<InputLabel>Budget</InputLabel>
 					<Select
 						value={budgetFilter}
@@ -168,97 +280,113 @@ const HomePage = () => {
 						label='Budget'
 					>
 						<MenuItem value=''>All</MenuItem>
-						<MenuItem value='lt500k'>Below KES 500K</MenuItem>
-						<MenuItem value='500k-1m'>KES 500K - 1M</MenuItem>
-						<MenuItem value='gt1m'>Above KES 1M</MenuItem>
+						<MenuItem value='lt500k'>Below 500K</MenuItem>
+						<MenuItem value='500k-1m'>500K – 1M</MenuItem>
+						<MenuItem value='gt1m'>Above 1M</MenuItem>
 					</Select>
 				</FormControl>
 			</Box>
 
-			{/* Selected Category Display */}
-			{filter && (
-				<Typography variant='subtitle1' sx={{ mb: 2 }}>
-					Showing: <strong>{selectedCategory}</strong>
-				</Typography>
+			{/* Product Grid */}
+			<Grid container spacing={3}>
+				{loading
+					? Array.from({ length: 8 }).map((_, i) => (
+							<Grid item xs={12} sm={6} md={4} lg={3} key={i}>
+								<Skeleton variant='rectangular' height={200} />
+								<Skeleton variant='text' />
+								<Skeleton variant='text' width='60%' />
+							</Grid>
+					  ))
+					: visibleProducts.map((product) => (
+							<Grid
+								item
+								xs={12}
+								sm={6}
+								md={4}
+								lg={3}
+								key={product.id}
+								sx={{
+									opacity: 0,
+									animation: "fadeIn 0.7s ease-in-out forwards",
+									"@keyframes fadeIn": {
+										to: { opacity: 1 },
+									},
+								}}
+							>
+								<Card
+									component={Link}
+									to={`/product/${product.id}`}
+									sx={{
+										position: "relative",
+										textDecoration: "none",
+										borderRadius: 3,
+										boxShadow: 3,
+										overflow: "hidden",
+										transition: "0.3s",
+										"&:hover": {
+											boxShadow: 6,
+											transform: "translateY(-6px)",
+										},
+									}}
+								>
+									<CardMedia
+										component='img'
+										height='200'
+										image={`${BACKEND_BASE_URL}${product.image}`}
+										alt={product.title}
+									/>
+									{product.status === "inactive" && (
+										<Box
+											sx={{
+												position: "absolute",
+												top: 8,
+												left: 8,
+												bgcolor: "red",
+												color: "#fff",
+												px: 1.5,
+												py: 0.5,
+												borderRadius: 1,
+												fontSize: "0.75rem",
+												fontWeight: "bold",
+											}}
+										>
+											INACTIVE
+										</Box>
+									)}
+									<CardContent>
+										<Typography variant='h6' fontWeight={600} noWrap>
+											{product.title}
+										</Typography>
+										<Typography
+											variant='body2'
+											color='text.secondary'
+											sx={{
+												display: "-webkit-box",
+												WebkitLineClamp: 2,
+												WebkitBoxOrient: "vertical",
+												overflow: "hidden",
+											}}
+										>
+											{product.description}
+										</Typography>
+										<Typography
+											variant='subtitle1'
+											sx={{ mt: 1.5, fontWeight: 700 }}
+										>
+											KES {product.price.toLocaleString()}
+										</Typography>
+									</CardContent>
+								</Card>
+							</Grid>
+					  ))}
+			</Grid>
+
+			{/* Infinite Scroll Observer */}
+			{!loading && visibleCount < filtered.length && (
+				<Box ref={observerRef} sx={{ height: 50 }} />
 			)}
 
-			{/* Product Grid */}
-			<Grid container spacing={4}>
-				{filtered.map((product) => (
-					<Grid item xs={12} sm={6} md={4} lg={3} key={product.id}>
-						<Card
-							component={Link}
-							to={`/product/${product.id}`}
-							sx={{
-								position: "relative",
-								textDecoration: "none",
-								borderRadius: 3,
-								boxShadow: 3,
-								overflow: "hidden",
-								transition: "all 0.3s ease",
-								display: "flex",
-								flexDirection: "column",
-								"&:hover": {
-									boxShadow: 6,
-									transform: "translateY(-6px)",
-								},
-							}}
-						>
-							<CardMedia
-								component='img'
-								height='200'
-								image={`${BACKEND_BASE_URL}${product.image}`}
-								alt={product.name}
-								sx={{ objectFit: "cover" }}
-							/>
-
-							{product.status === "inactive" && (
-								<Box
-									sx={{
-										position: "absolute",
-										top: 8,
-										left: 8,
-										bgcolor: "red",
-										color: "white",
-										px: 1.5,
-										py: 0.5,
-										borderRadius: 1,
-										fontSize: "0.75rem",
-										fontWeight: "bold",
-									}}
-								>
-									INACTIVE
-								</Box>
-							)}
-
-							<CardContent sx={{ flexGrow: 1 }}>
-								<Typography variant='h6' fontWeight={600} noWrap>
-									{product.name}
-								</Typography>
-								<Typography
-									variant='body2'
-									color='text.secondary'
-									sx={{
-										overflow: "hidden",
-										textOverflow: "ellipsis",
-										display: "-webkit-box",
-										WebkitLineClamp: 3,
-										WebkitBoxOrient: "vertical",
-									}}
-								>
-									{product.description}
-								</Typography>
-								<Typography
-									variant='subtitle1'
-									sx={{ mt: 2, fontWeight: 700, color: "primary.main" }}
-								>
-									KES {product.price.toLocaleString()}
-								</Typography>
-							</CardContent>
-						</Card>
-					</Grid>
-				))}
-			</Grid>
+			<ScrollTop />
 		</Box>
 	);
 };

@@ -15,7 +15,9 @@ import {
 	Tab,
 	Divider,
 	Paper,
+	Badge,
 } from "@mui/material";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { toast } from "react-toastify";
 import axios from "../api/axios";
 import { useCart } from "../pages/CartContext";
@@ -26,6 +28,9 @@ const ProductDetailPage = () => {
 	const { id } = useParams();
 	const navigate = useNavigate();
 	const { dispatch } = useCart();
+
+	const { cart } = useCart();
+	const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
 	const [product, setProduct] = useState(null);
 	const [relatedProducts, setRelatedProducts] = useState([]);
@@ -83,6 +88,22 @@ const ProductDetailPage = () => {
 		<Box
 			sx={{ px: { xs: 2, md: 6 }, py: { xs: 4, md: 6 }, bgcolor: "#f9f9f9" }}
 		>
+			{/* Cart Button */}
+			<Box display='flex' justifyContent='flex-end' mb={2}>
+				<Button
+					variant='contained'
+					color='primary'
+					component={Link}
+					to='/cart'
+					startIcon={
+						<Badge badgeContent={totalItems} color='error'>
+							<ShoppingCartIcon />
+						</Badge>
+					}
+				>
+					View Cart
+				</Button>
+			</Box>
 			<Button variant='outlined' onClick={() => navigate(-1)} sx={{ mb: 3 }}>
 				← Back
 			</Button>
