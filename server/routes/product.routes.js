@@ -15,6 +15,7 @@ router.post(
 	upload.fields([
 		{ name: "image", maxCount: 1 },
 		{ name: "plan_file", maxCount: 1 },
+		{ name: "images", maxCount: 10 },
 	]),
 	controller.createProduct
 );
@@ -32,5 +33,10 @@ router.put(
 	controller.updateProduct
 );
 router.delete("/:id", authenticate, controller.deleteProduct);
+
+router.get("/:id/download", (req, res) => {
+	const { token } = req.query;
+	return productController.downloadPlan(req, res);
+});
 
 module.exports = router;

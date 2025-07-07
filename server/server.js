@@ -17,6 +17,11 @@ app.use("/api/products", require("./routes/product.routes"));
 app.use("/api/orders", require("./routes/order.routes"));
 app.use("/uploads", express.static("uploads")); // serve images
 app.use("/api/images", require("./routes/image.routes"));
+const purchaseRoutes = require("./routes/purchase.routes");
+const paymentRoutes = require("./routes/payment.routes");
+
+app.use("/api/purchases", purchaseRoutes);
+app.use("/api/payments", paymentRoutes);
 
 app.get("/", (_, res) => res.send("API running ✔"));
 

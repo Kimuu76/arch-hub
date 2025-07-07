@@ -15,16 +15,25 @@ const getAll = async () => {
 
 const getById = async (id) => {
 	const pool = await poolPromise;
-	const result = await pool.request().input("id", id).query(`
-			SELECT p.*, c.name AS category_name
-			FROM Products p
-			LEFT JOIN Categories c ON p.category_id = c.id
-			WHERE p.id = @id
-		`);
-	return result.recordset[0];
+	const productRes = await pool.request().input("id", id).query(`
+		SELECT p.*, c.name AS category_name
+		FROM Products p
+		LEFT JOIN Categories c ON p.category_id = c.id
+		WHERE p.id = @id
+	`);
+
+	const product = productRes.recordset[0];
+	if (!product) return null;
+
+	const imageRes = await pool.request().input("id", id).query(`
+		SELECT image_path FROM ProductImages WHERE product_id = @id
+	`);
+	product.images = imageRes.recordset.map((img) => img.image_path);
+
+	return product;
 };
 
-const create = async (product) => {
+/*const create = async (product) => {
 	const {
 		title,
 		description,
@@ -70,7 +79,92 @@ const create = async (product) => {
 				@plot_size, @roof_type, @style
 			)
 		`);
-	return result.recordset[0];
+
+	const productId = result.recordset[0].id;
+
+	// Save multiple image paths
+	for (const path of imagePaths) {
+		await pool
+			.request()
+			.input("product_id", productId)
+			.input("image_path", path)
+			.query(
+				`INSERT INTO ProductImages (product_id, image_path) VALUES (@product_id, @image_path)`
+			);
+	}
+
+	const fullProduct = await getById(productId);
+	return fullProduct;
+	//return result.recordset[0];
+};*/
+
+const create = async (product) => {
+	const {
+		title,
+		description,
+		short_description,
+		price,
+		category_id,
+		image, // fallback if no images[] provided
+		plan_file,
+		bedrooms,
+		bathrooms,
+		stories,
+		plot_size,
+		roof_type,
+		style,
+		imagePaths = [], // multiple uploaded image paths
+	} = product;
+
+	const pool = await poolPromise;
+
+	// 👇 Use the first image from imagePaths or fallback to uploaded `image`
+	const mainImagePath =
+		imagePaths.length > 0 ? imagePaths[0] : image ? `/uploads/${image}` : null;
+
+	const result = await pool
+		.request()
+		.input("title", title)
+		.input("description", description)
+		.input("short_description", short_description)
+		.input("price", price)
+		.input("category_id", category_id)
+		.input("image", mainImagePath)
+		.input("plan_file", plan_file ? `/uploads/${plan_file}` : null)
+		.input("bedrooms", bedrooms)
+		.input("bathrooms", bathrooms)
+		.input("stories", stories)
+		.input("plot_size", plot_size)
+		.input("roof_type", roof_type)
+		.input("style", style).query(`
+			INSERT INTO Products (
+				title, description, short_description, price, category_id,
+				image, plan_file, bedrooms, bathrooms, stories,
+				plot_size, roof_type, style
+			)
+			OUTPUT INSERTED.*
+			VALUES (
+				@title, @description, @short_description, @price, @category_id,
+				@image, @plan_file, @bedrooms, @bathrooms, @stories,
+				@plot_size, @roof_type, @style
+			)
+		`);
+
+	const productId = result.recordset[0].id;
+
+	// 🔁 Insert all image paths into ProductImages table
+	for (const path of imagePaths) {
+		await pool
+			.request()
+			.input("product_id", productId)
+			.input("image_path", path).query(`
+				INSERT INTO ProductImages (product_id, image_path)
+				VALUES (@product_id, @image_path)
+			`);
+	}
+
+	// Return full enriched product
+	return await getById(productId);
 };
 
 /*const update = async (id, product) => {
@@ -171,6 +265,15 @@ const toggleStatus = async (id) => {
 		.query("SELECT * FROM Products WHERE id = @id");
 
 	return result.recordset[0];
+};
+
+exports.getByToken = async (token) => {
+	const pool = await poolPromise;
+	const { recordset } = await pool
+		.request()
+		.input("token", token)
+		.query("SELECT * FROM Purchases WHERE download_token = @token");
+	return recordset[0];
 };
 
 const remove = async (id) => {

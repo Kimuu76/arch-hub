@@ -72,27 +72,26 @@ const CheckoutPage = () => {
 	};
 
 	const handleSubmit = async () => {
-		//if (!validate()) return;
-
 		setLoading(true);
 		setError("");
 
 		try {
-			const res = await axios.post("/orders/checkout", {
-				...form,
-				items: cart.map((i) => ({
-					product_id: i.id,
-					quantity: i.quantity,
-					price: i.price,
-				})),
-				total_amount: total,
+			const res = await axios.post("/payments/stk-push", {
+				phone: form.customer_phone,
+				amount: total,
+				products: cart.map((i) => i.id), // Send product IDs
 			});
 
-			clearCart();
-			window.location.href = res.data.payment_url;
+			if (res.data.success) {
+				clearCart();
+				alert("Payment request sent. Check your phone to complete payment.");
+				navigate("/"); // Or show success page
+			} else {
+				setError("Failed to initiate payment.");
+			}
 		} catch (err) {
-			console.error(err);
-			setError("Failed to place order. Please try again.");
+			console.error("STK push failed:", err);
+			setError("Payment request failed. Please try again.");
 		} finally {
 			setLoading(false);
 		}

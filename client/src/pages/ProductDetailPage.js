@@ -1,5 +1,4 @@
 /** @format */
-
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import {
@@ -16,7 +15,11 @@ import {
 	Divider,
 	Paper,
 	Badge,
+	useTheme,
+	useMediaQuery,
 } from "@mui/material";
+import { Carousel } from "react-responsive-carousel";
+import "react-responsive-carousel/lib/styles/carousel.min.css";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { toast } from "react-toastify";
 import axios from "../api/axios";
@@ -27,15 +30,38 @@ const BACKEND_BASE_URL = "https://arch-hub-server.onrender.com";
 const ProductDetailPage = () => {
 	const { id } = useParams();
 	const navigate = useNavigate();
-	const { dispatch } = useCart();
-
-	const { cart } = useCart();
+	const { dispatch, cart } = useCart();
 	const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+	const [hasPurchased, setHasPurchased] = useState(false);
+	const [user, setUser] = useState(null); // Optional: replace with your auth system
+
+	const theme = useTheme();
+	const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
 	const [product, setProduct] = useState(null);
 	const [relatedProducts, setRelatedProducts] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [tabIndex, setTabIndex] = useState(0);
+
+	const [canDownload, setCanDownload] = useState(false);
+
+	useEffect(() => {
+		const checkAccess = async () => {
+			const token = localStorage.getItem(`purchase_${id}`);
+			if (!token) return;
+
+			try {
+				const res = await axios.get(`/purchases/validate`, {
+					params: { token, product_id: id },
+				});
+				if (res.data.valid) setCanDownload(true);
+			} catch (err) {
+				setCanDownload(false);
+			}
+		};
+		checkAccess();
+	}, [id]);
 
 	useEffect(() => {
 		const fetchProductAndRelated = async () => {
@@ -61,14 +87,18 @@ const ProductDetailPage = () => {
 
 	if (loading) {
 		return (
-			<Box display='flex' justifyContent='center' mt={6}>
-				<CircularProgress />
+			<Box display='flex' justifyContent='center' mt={8}>
+				<CircularProgress size={40} />
 			</Box>
 		);
 	}
 
 	if (!product) {
-		return <Typography textAlign='center'>Product not found</Typography>;
+		return (
+			<Typography textAlign='center' mt={4}>
+				Product not found.
+			</Typography>
+		);
 	}
 
 	const handleAddToCart = () => {
@@ -84,10 +114,12 @@ const ProductDetailPage = () => {
 		toast.success(`${product.title} added to cart!`);
 	};
 
+	const token = localStorage.getItem(`purchase_${product.id}`);
+
+	localStorage.setItem(`purchase_${product.id}`, token);
+
 	return (
-		<Box
-			sx={{ px: { xs: 2, md: 6 }, py: { xs: 4, md: 6 }, bgcolor: "#f9f9f9" }}
-		>
+		<Box sx={{ px: { xs: 2, md: 6 }, py: 5, bgcolor: "#f9f9f9" }}>
 			{/* Cart Button */}
 			<Box display='flex' justifyContent='flex-end' mb={2}>
 				<Button
@@ -104,58 +136,71 @@ const ProductDetailPage = () => {
 					View Cart
 				</Button>
 			</Box>
-			<Button variant='outlined' onClick={() => navigate(-1)} sx={{ mb: 3 }}>
+
+			<Button onClick={() => navigate(-1)} sx={{ mb: 3 }}>
 				← Back
 			</Button>
 
-			<Grid container spacing={4}>
-				{/* Image */}
+			<Grid container spacing={5}>
+				{/* Images */}
 				<Grid item xs={12} md={6}>
-					<Paper
-						elevation={3}
-						sx={{
-							overflow: "hidden",
-							borderRadius: 2,
-							p: 1,
-						}}
-					>
-						<CardMedia
-							component='img'
-							image={`${BACKEND_BASE_URL}${product.image}`}
-							alt={product.name}
-							sx={{
-								width: "100%",
-								objectFit: "cover",
-								borderRadius: 2,
-								cursor: "zoom-in",
-							}}
-							onClick={() =>
-								window.open(`${BACKEND_BASE_URL}${product.image}`, "_blank")
-							}
-						/>
+					<Paper elevation={3} sx={{ borderRadius: 3, p: 1 }}>
+						<Carousel
+							showThumbs={!isMobile}
+							autoPlay
+							infiniteLoop
+							showStatus={false}
+							showArrows
+							emulateTouch
+						>
+							{(product.images?.length ? product.images : [product.image]).map(
+								(img, i) => (
+									<div key={i}>
+										<img
+											src={`${BACKEND_BASE_URL}${img}`}
+											alt={`${product.title} ${i + 1}`}
+											style={{
+												maxHeight: 450,
+												objectFit: "cover",
+												width: "100%",
+											}}
+										/>
+									</div>
+								)
+							)}
+						</Carousel>
 					</Paper>
 				</Grid>
 
 				{/* Product Info */}
 				<Grid item xs={12} md={6}>
 					<Typography variant='h4' fontWeight={700} gutterBottom>
-						{product.name}
+						{product.title}
 					</Typography>
-					<Typography variant='h6' color='primary' gutterBottom>
-						KES {product.price}
+
+					<Typography
+						variant='h5'
+						color='primary'
+						fontWeight={600}
+						sx={{ mb: 2 }}
+					>
+						KES {product.price.toLocaleString()}
 					</Typography>
+
 					<Typography variant='body1' sx={{ mb: 3 }}>
 						{product.short_description || product.description?.slice(0, 200)}
 					</Typography>
+
 					<Button
 						variant='contained'
 						color='primary'
 						onClick={handleAddToCart}
-						sx={{ px: 4, py: 1 }}
+						sx={{ px: 4, py: 1.2, fontWeight: 600 }}
 						disabled={product.status === "inactive"}
 					>
 						{product.status === "inactive" ? "Unavailable" : "Add to Cart"}
 					</Button>
+
 					{product.status === "inactive" && (
 						<Typography variant='body2' color='error' mt={2}>
 							This product is currently inactive and cannot be added to the
@@ -165,14 +210,15 @@ const ProductDetailPage = () => {
 				</Grid>
 			</Grid>
 
-			{/* Tabs */}
-			<Box sx={{ mt: 6 }}>
+			{/* Tabs Section */}
+			<Box mt={6}>
 				<Tabs
 					value={tabIndex}
-					onChange={(e, newVal) => setTabIndex(newVal)}
+					onChange={(e, val) => setTabIndex(val)}
 					indicatorColor='primary'
 					textColor='primary'
 					variant='scrollable'
+					scrollButtons='auto'
 				>
 					<Tab label='Overview' />
 					{product.plan_file && <Tab label='Plan File' />}
@@ -182,28 +228,33 @@ const ProductDetailPage = () => {
 
 				<Divider sx={{ my: 2 }} />
 
-				{/* Overview Tab */}
+				{/* Overview */}
 				{tabIndex === 0 && (
-					<Box>
-						<Typography variant='body1'>{product.description}</Typography>
-					</Box>
+					<Typography variant='body1' sx={{ lineHeight: 1.8 }}>
+						{product.description}
+					</Typography>
 				)}
 
+				{/* Plan File */}
 				{tabIndex === 1 && product.plan_file && (
 					<Button
 						variant='outlined'
-						href={`${BACKEND_BASE_URL}${product.plan_file}`}
-						target='_blank'
-						rel='noopener noreferrer'
+						component={canDownload ? "a" : undefined}
+						href={
+							canDownload
+								? `/products/${product.id}/download?token=${token}`
+								: undefined
+						}
+						disabled={!canDownload}
 					>
-						Download Plan File
+						{canDownload ? "Download Plan File" : "Buy to Download"}
 					</Button>
 				)}
 
-				{/* Specifications Tab */}
+				{/* Specifications */}
 				{tabIndex === 2 && (
 					<Grid container spacing={2}>
-						<Grid item xs={6}>
+						<Grid item xs={12} sm={6}>
 							<Typography>
 								<strong>Bedrooms:</strong> {product.bedrooms || "N/A"}
 							</Typography>
@@ -217,7 +268,7 @@ const ProductDetailPage = () => {
 								<strong>Category:</strong> {product.category_name || "N/A"}
 							</Typography>
 						</Grid>
-						<Grid item xs={6}>
+						<Grid item xs={12} sm={6}>
 							<Typography>
 								<strong>Plot Size:</strong> {product.plot_size || "N/A"}
 							</Typography>
@@ -231,7 +282,7 @@ const ProductDetailPage = () => {
 					</Grid>
 				)}
 
-				{/* Reviews Tab */}
+				{/* Reviews Placeholder */}
 				{tabIndex === 3 && (
 					<Typography variant='body2' color='text.secondary'>
 						Reviews feature coming soon!
@@ -253,11 +304,11 @@ const ProductDetailPage = () => {
 									to={`/product/${p.id}`}
 									sx={{
 										textDecoration: "none",
-										borderRadius: 2,
+										borderRadius: 3,
 										boxShadow: 2,
 										transition: "0.3s",
 										"&:hover": {
-											transform: "translateY(-5px)",
+											transform: "scale(1.02)",
 											boxShadow: 4,
 										},
 									}}
@@ -266,15 +317,15 @@ const ProductDetailPage = () => {
 										component='img'
 										height='140'
 										image={`${BACKEND_BASE_URL}${p.image}`}
-										alt={p.name}
+										alt={p.title}
 										sx={{ objectFit: "cover" }}
 									/>
 									<CardContent>
 										<Typography variant='subtitle1' fontWeight={600} noWrap>
-											{p.name}
+											{p.title}
 										</Typography>
 										<Typography variant='body2' color='text.secondary'>
-											KES {p.price}
+											KES {p.price.toLocaleString()}
 										</Typography>
 									</CardContent>
 								</Card>

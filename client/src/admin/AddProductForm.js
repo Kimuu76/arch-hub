@@ -10,7 +10,9 @@ import {
 	DialogActions,
 	MenuItem,
 	Stack,
+	CircularProgress,
 } from "@mui/material";
+import { toast } from "react-toastify";
 import axios from "../api/axios";
 
 const AddProductForm = ({ open, onClose, onProductSaved, initialData }) => {
@@ -20,7 +22,7 @@ const AddProductForm = ({ open, onClose, onProductSaved, initialData }) => {
 		short_description: "",
 		description: "",
 		category_id: "",
-		image: null,
+		images: null,
 		plan_file: null,
 		bedrooms: "",
 		bathrooms: "",
@@ -31,6 +33,7 @@ const AddProductForm = ({ open, onClose, onProductSaved, initialData }) => {
 	});
 
 	const [categories, setCategories] = useState([]);
+	const [loading, setLoading] = useState(false);
 
 	useEffect(() => {
 		if (initialData) {
@@ -48,16 +51,31 @@ const AddProductForm = ({ open, onClose, onProductSaved, initialData }) => {
 
 	const handleChange = (e) => {
 		const { name, value, files } = e.target;
-		setForm((prev) => ({
-			...prev,
-			[name]: files ? files[0] : value,
-		}));
+		if (name === "images") {
+			setForm((prev) => ({
+				...prev,
+				images: files,
+			}));
+		} else {
+			setForm((prev) => ({
+				...prev,
+				[name]: files ? files[0] : value,
+			}));
+		}
 	};
 
 	const handleSubmit = async () => {
+		setLoading(true);
 		const data = new FormData();
+
 		for (const key in form) {
-			if (form[key]) data.append(key, form[key]);
+			if (key === "images" && form.images) {
+				for (let i = 0; i < form.images.length; i++) {
+					data.append("images", form.images[i]);
+				}
+			} else if (form[key]) {
+				data.append(key, form[key]);
+			}
 		}
 
 		try {
@@ -71,11 +89,16 @@ const AddProductForm = ({ open, onClose, onProductSaved, initialData }) => {
 				headers: { "Content-Type": "multipart/form-data" },
 			});
 
+			toast.success(
+				`Product ${initialData ? "updated" : "saved"} successfully`
+			);
 			onProductSaved(res.data);
 			onClose();
 		} catch (err) {
 			console.error("Product save failed", err);
+			toast.error("Failed to save product. Please try again.");
 		}
+		setLoading(false);
 	};
 
 	return (
@@ -131,7 +154,6 @@ const AddProductForm = ({ open, onClose, onProductSaved, initialData }) => {
 						))}
 					</TextField>
 
-					{/* Specifications */}
 					<TextField
 						label='Bedrooms'
 						name='bedrooms'
@@ -179,15 +201,17 @@ const AddProductForm = ({ open, onClose, onProductSaved, initialData }) => {
 					/>
 
 					<Button variant='outlined' component='label'>
-						Upload Image
+						Upload Images (multiple)
 						<input
 							type='file'
-							name='image'
+							name='images'
+							multiple
 							hidden
 							accept='image/*'
 							onChange={handleChange}
 						/>
 					</Button>
+
 					<Button variant='outlined' component='label'>
 						Upload Plan File
 						<input
@@ -201,9 +225,22 @@ const AddProductForm = ({ open, onClose, onProductSaved, initialData }) => {
 				</Stack>
 			</DialogContent>
 			<DialogActions>
-				<Button onClick={onClose}>Cancel</Button>
-				<Button onClick={handleSubmit} variant='contained'>
-					{initialData ? "Update" : "Save"}
+				<Button onClick={onClose} disabled={loading}>
+					Cancel
+				</Button>
+				<Button
+					onClick={handleSubmit}
+					variant='contained'
+					disabled={loading}
+					startIcon={loading ? <CircularProgress size={20} /> : null}
+				>
+					{loading
+						? initialData
+							? "Updating..."
+							: "Saving..."
+						: initialData
+						? "Update"
+						: "Save"}
 				</Button>
 			</DialogActions>
 		</Dialog>
