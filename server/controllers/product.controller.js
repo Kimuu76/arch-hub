@@ -10,12 +10,16 @@ const getAllProducts = async (_, res) => {
 };
 
 const getProductById = async (req, res) => {
+	console.log("Fetching product ID:", req.params.id);
 	const product = await productService.getById(req.params.id);
-	if (!product) return res.sendStatus(404);
+	if (!product) {
+		console.warn("Product not found:", req.params.id);
+		return res.sendStatus(404);
+	}
 	res.json(product);
 };
 
-exports.downloadPlan = async (req, res) => {
+const downloadPlan = async (req, res) => {
 	const { id } = req.params;
 	const { token } = req.query;
 
@@ -205,4 +209,5 @@ module.exports = {
 	updateProduct,
 	deleteProduct,
 	toggleProductStatus,
+	downloadPlan,
 };

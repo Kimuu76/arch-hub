@@ -9,7 +9,9 @@ const { initializeModels } = require("./models/initModels");
 
 const app = express();
 app.use(cors());
+
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/auth", require("./routes/auth.routes"));
 app.use("/api/categories", require("./routes/category.routes"));
@@ -17,11 +19,10 @@ app.use("/api/products", require("./routes/product.routes"));
 app.use("/api/orders", require("./routes/order.routes"));
 app.use("/uploads", express.static("uploads")); // serve images
 app.use("/api/images", require("./routes/image.routes"));
-const purchaseRoutes = require("./routes/purchase.routes");
-const paymentRoutes = require("./routes/payment.routes");
-
-app.use("/api/purchases", purchaseRoutes);
-app.use("/api/payments", paymentRoutes);
+app.use("/api/purchases", require("./routes/purchase.routes"));
+app.use("/api/payments", require("./routes/payment.routes"));
+app.use("/api/admin", require("./routes/admin.routes"));
+app.use("/api/admin", require("./routes/admin.routes"));
 
 app.get("/", (_, res) => res.send("API running ✔"));
 

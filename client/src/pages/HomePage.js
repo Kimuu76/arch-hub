@@ -28,8 +28,9 @@ import "react-responsive-carousel/lib/styles/carousel.min.css";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { getAllProducts, getAllCategories } from "../api/productApi";
 import { useCart } from "../pages/CartContext";
+import ProductCard from "../components/ProductCard";
 
-const BACKEND_BASE_URL = "https://arch-hub-server.onrender.com";
+const BACKEND_BASE_URL = "http://localhost:5000";
 const itemsPerLoad = 8;
 
 const ScrollTop = () => {
@@ -128,6 +129,9 @@ const HomePage = () => {
 			.slice(0, 5);
 	}, [products]);
 
+	const isImageFile = (filename) =>
+		/\.(jpg|jpeg|png|webp|gif)$/i.test(filename);
+
 	return (
 		<Box sx={{ px: { xs: 2, md: 6 }, py: 4, bgcolor: "#f9f9f9" }}>
 			{/* Cart */}
@@ -147,37 +151,85 @@ const HomePage = () => {
 				</Button>
 			</Box>
 
-			{/* Carousel */}
-			{featured.length > 0 && (
-				<Box sx={{ mb: 4 }}>
-					<Carousel
-						showThumbs={false}
-						autoPlay
-						infiniteLoop
-						showStatus={false}
-						showArrows
-					>
-						{featured.map((product) => (
-							<div key={product.id}>
-								<img
-									src={`${BACKEND_BASE_URL}${product.image}`}
-									alt={product.title}
-									style={{
-										height: 400,
-										objectFit: "cover",
-										width: "100%",
-									}}
-								/>
-								<p className='legend'>
-									<Link to={`/product/${product.id}`} style={{ color: "#fff" }}>
-										{product.title} – KES {product.price.toLocaleString()}
-									</Link>
-								</p>
-							</div>
-						))}
-					</Carousel>
-				</Box>
-			)}
+			{/* Combined Hero Section with CTA + Carousel */}
+			<Box
+				sx={{
+					minHeight: { xs: 500, md: 600 },
+					background: `linear-gradient(to right, rgba(0,0,0,0.6), rgba(0,0,0,0.3)), url(/hero.jpg) center/cover no-repeat`,
+					color: "#fff",
+					display: "flex",
+					flexDirection: "column",
+					justifyContent: "center",
+					alignItems: "center",
+					textAlign: "center",
+					borderRadius: 3,
+					p: { xs: 3, md: 6 },
+					mb: 6,
+				}}
+			>
+				{/* Headline */}
+				<Typography variant='h3' fontWeight={800}>
+					Affordable, Ready-to-Build House Designs
+				</Typography>
+
+				{/* Subtitle */}
+				<Typography variant='h6' mt={2} mb={3}>
+					Plans for modern living – from bungalows to villas
+				</Typography>
+
+				{/* CTA Button */}
+				<Button
+					variant='contained'
+					size='large'
+					color='secondary'
+					component={Link}
+					to='/shop'
+					sx={{ mb: 4 }}
+				>
+					🛒 Browse Designs
+				</Button>
+
+				{/* Featured Carousel */}
+				{featured.length > 0 && (
+					<Box sx={{ width: "100%", maxWidth: 1000 }}>
+						<Carousel
+							showThumbs={false}
+							autoPlay
+							infiniteLoop
+							showStatus={false}
+							showArrows
+							emulateTouch
+						>
+							{featured.map((product) => (
+								<div key={product.id}>
+									<img
+										src={`${BACKEND_BASE_URL}${product.image}`}
+										alt={product.title}
+										style={{
+											height: 400,
+											objectFit: "cover",
+											width: "100%",
+											borderRadius: 8,
+										}}
+									/>
+									<p className='legend'>
+										<Link
+											to={`/product/${product.id}`}
+											style={{
+												color: "#fff",
+												fontWeight: "bold",
+												textShadow: "1px 1px 2px black",
+											}}
+										>
+											{product.title} – KES {product.price.toLocaleString()}
+										</Link>
+									</p>
+								</div>
+							))}
+						</Carousel>
+					</Box>
+				)}
+			</Box>
 
 			{/* Banner */}
 			<Box
@@ -287,99 +339,65 @@ const HomePage = () => {
 				</FormControl>
 			</Box>
 
-			{/* Product Grid */}
-			<Grid container spacing={3}>
-				{loading
-					? Array.from({ length: 8 }).map((_, i) => (
-							<Grid item xs={12} sm={6} md={4} lg={3} key={i}>
-								<Skeleton variant='rectangular' height={200} />
-								<Skeleton variant='text' />
-								<Skeleton variant='text' width='60%' />
-							</Grid>
-					  ))
-					: visibleProducts.map((product) => (
-							<Grid
-								item
-								xs={12}
-								sm={6}
-								md={4}
-								lg={3}
-								key={product.id}
-								sx={{
-									opacity: 0,
-									animation: "fadeIn 0.7s ease-in-out forwards",
-									"@keyframes fadeIn": {
-										to: { opacity: 1 },
-									},
-								}}
-							>
-								<Card
-									component={Link}
-									to={`/product/${product.id}`}
-									sx={{
-										position: "relative",
-										textDecoration: "none",
-										borderRadius: 3,
-										boxShadow: 3,
-										overflow: "hidden",
-										transition: "0.3s",
-										"&:hover": {
-											boxShadow: 6,
-											transform: "translateY(-6px)",
-										},
-									}}
-								>
-									<CardMedia
-										component='img'
-										height='200'
-										image={`${BACKEND_BASE_URL}${product.image}`}
-										alt={product.title}
-									/>
-									{product.status === "inactive" && (
-										<Box
-											sx={{
-												position: "absolute",
-												top: 8,
-												left: 8,
-												bgcolor: "red",
-												color: "#fff",
-												px: 1.5,
-												py: 0.5,
-												borderRadius: 1,
-												fontSize: "0.75rem",
-												fontWeight: "bold",
-											}}
-										>
-											INACTIVE
-										</Box>
-									)}
-									<CardContent>
-										<Typography variant='h6' fontWeight={600} noWrap>
-											{product.title}
-										</Typography>
-										<Typography
-											variant='body2'
-											color='text.secondary'
-											sx={{
-												display: "-webkit-box",
-												WebkitLineClamp: 2,
-												WebkitBoxOrient: "vertical",
-												overflow: "hidden",
-											}}
-										>
-											{product.description}
-										</Typography>
-										<Typography
-											variant='subtitle1'
-											sx={{ mt: 1.5, fontWeight: 700 }}
-										>
-											KES {product.price.toLocaleString()}
-										</Typography>
-									</CardContent>
-								</Card>
-							</Grid>
-					  ))}
-			</Grid>
+			{/* Product List - Vertical Layout for Better UX */}
+			{loading ? (
+				Array.from({ length: 4 }).map((_, i) => (
+					<Box
+						key={i}
+						sx={{
+							p: 2,
+							bgcolor: "#fff",
+							borderRadius: 3,
+							boxShadow: 2,
+							mb: 4,
+						}}
+					>
+						<Skeleton
+							variant='rectangular'
+							height={200}
+							sx={{ borderRadius: 2 }}
+						/>
+						<Skeleton variant='text' height={30} width='60%' sx={{ mt: 2 }} />
+						<Skeleton variant='text' width='80%' />
+						<Skeleton variant='text' width='40%' />
+					</Box>
+				))
+			) : (
+				<Grid container spacing={3}>
+					{visibleProducts.map((product) => (
+						<Grid item xs={12} sm={6} md={4} key={product.id}>
+							<ProductCard product={product} />
+						</Grid>
+					))}
+				</Grid>
+			)}
+
+			{/* About / Contact Section */}
+			<Box
+				sx={{
+					mt: 8,
+					p: 4,
+					textAlign: "center",
+					bgcolor: "#e3f2fd",
+					borderRadius: 3,
+				}}
+			>
+				<Typography variant='h5' fontWeight={700}>
+					About ArchiManfe
+				</Typography>
+				<Typography mt={1}>
+					"I'm passionate about empowering families to build affordable homes
+					with smart, ready-to-build plans. ArchiManfe started from a simple
+					mission: to make architecture more accessible."
+				</Typography>
+				<Typography mt={2}>
+					📞 WhatsApp:{" "}
+					<a href='https://wa.me/254717365839' target='_blank' rel='noreferrer'>
+						254717365839
+					</a>{" "}
+					| ✉️ Email: info@archimanfe.com
+				</Typography>
+			</Box>
 
 			{/* Infinite Scroll Observer */}
 			{!loading && visibleCount < filtered.length && (

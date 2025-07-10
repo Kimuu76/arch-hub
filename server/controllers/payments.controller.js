@@ -7,7 +7,7 @@ const darajaConfig = {
 	consumerKey: process.env.MPESA_KEY,
 	consumerSecret: process.env.MPESA_SECRET,
 	shortCode: process.env.MPESA_PAYBILL,
-	//passkey: process.env.MPESA_PASSKEY,
+	passkey: process.env.MPESA_PASSKEY,
 	callbackUrl: `${process.env.BASE_URL}/payments/callback/stk`,
 };
 

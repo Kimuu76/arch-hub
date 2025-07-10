@@ -13,8 +13,10 @@ import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
 
 import AdminDashboard from "./admin/AdminDashboard";
+import DashboardSummary from "./admin/DashboardSummary";
 import ProductManager from "./admin/ProductManager";
 import CategoryManager from "./admin/CategoryManager";
+import AdminPurchasesPage from "./admin/AdminPurchasesPage";
 
 import { AuthProvider } from "./auth/AuthContext";
 import RequireAdmin from "./auth/RequireAdmin";
@@ -47,8 +49,10 @@ export default function App() {
 							}
 						>
 							<Route index element={<ProductManager />} />
+							<Route path='dashboard' element={<DashboardSummary />} />
 							<Route path='products' element={<ProductManager />} />
 							<Route path='categories' element={<CategoryManager />} />
+							<Route path='purchases' element={<AdminPurchasesPage />} />
 						</Route>
 					</Routes>
 				</Router>

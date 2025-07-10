@@ -28,6 +28,7 @@ import AddProductForm from "./AddProductForm";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+import AdminHeader from "../components/AdminHeader";
 
 const ProductManager = () => {
 	const [products, setProducts] = useState([]);
@@ -92,7 +93,7 @@ const ProductManager = () => {
 	// Filtering logic
 	const filteredProducts = useMemo(() => {
 		return products
-			.filter((p) => p.title.toLowerCase().includes(searchTerm.toLowerCase()))
+			.filter((p) => p.title?.toLowerCase().includes(searchTerm.toLowerCase()))
 			.filter((p) =>
 				selectedCategory === "all" ? true : p.category_id === selectedCategory
 			);
@@ -143,7 +144,7 @@ const ProductManager = () => {
 				spacing={2}
 				mb={2}
 			>
-				<Typography variant='h5'>Manage Products</Typography>
+				<AdminHeader title='Manage Products' emoji='🛒' />
 				<Stack direction='row' spacing={1}>
 					<Button variant='contained' onClick={() => setOpen(true)}>
 						Add Product

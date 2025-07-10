@@ -23,12 +23,17 @@ const getById = async (id) => {
 	`);
 
 	const product = productRes.recordset[0];
-	if (!product) return null;
+	if (product) {
+		const imageRes = await pool.request().input("id", id).query(`
+			SELECT image_path FROM ProductImages WHERE product_id = @id
+		`);
+		product.images = imageRes.recordset.map((img) => img.image_path);
 
-	const imageRes = await pool.request().input("id", id).query(`
-		SELECT image_path FROM ProductImages WHERE product_id = @id
-	`);
-	product.images = imageRes.recordset.map((img) => img.image_path);
+		// Normalize plan file path if needed
+		if (product.plan_file && !product.plan_file.startsWith("/uploads")) {
+			product.plan_file = `/uploads/${product.plan_file}`;
+		}
+	}
 
 	return product;
 };

@@ -19,6 +19,7 @@ import {
 } from "@mui/material";
 import { Delete, Edit } from "@mui/icons-material";
 import axios from "../api/axios";
+import AdminHeader from "../components/AdminHeader";
 
 function CategoryManager() {
 	const [categories, setCategories] = useState([]);
@@ -97,6 +98,7 @@ function CategoryManager() {
 
 	return (
 		<Box>
+			<AdminHeader title='Manage Categories' emoji='📂' />
 			<Paper sx={{ p: 3, mb: 3 }}>
 				<Stack direction={{ xs: "column", sm: "row" }} spacing={2} mb={2}>
 					<TextField

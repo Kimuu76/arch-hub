@@ -23,12 +23,13 @@ import "react-responsive-carousel/lib/styles/carousel.min.css";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { toast } from "react-toastify";
 import axios from "../api/axios";
+//import { useParams } from "react-router-dom";
 import { useCart } from "../pages/CartContext";
 
-const BACKEND_BASE_URL = "https://arch-hub-server.onrender.com";
+const BACKEND_BASE_URL = "http://localhost:5000";
 
 const ProductDetailPage = () => {
-	const { id } = useParams();
+	const { id: productId } = useParams();
 	const navigate = useNavigate();
 	const { dispatch, cart } = useCart();
 	const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -44,29 +45,33 @@ const ProductDetailPage = () => {
 	const [loading, setLoading] = useState(true);
 	const [tabIndex, setTabIndex] = useState(0);
 
-	const [canDownload, setCanDownload] = useState(false);
+	const [downloadable, setDownloadable] = useState(false);
 
 	useEffect(() => {
-		const checkAccess = async () => {
-			const token = localStorage.getItem(`purchase_${id}`);
+		const checkDownloadAccess = async () => {
+			const tokenMap = JSON.parse(
+				localStorage.getItem("purchaseTokens") || "{}"
+			);
+			const token = tokenMap[productId];
 			if (!token) return;
 
 			try {
 				const res = await axios.get(`/purchases/validate`, {
-					params: { token, product_id: id },
+					params: { product_id: productId, token },
 				});
-				if (res.data.valid) setCanDownload(true);
+				setDownloadable(res.data.valid);
 			} catch (err) {
-				setCanDownload(false);
+				console.error("❌ Download access check failed:", err);
 			}
 		};
-		checkAccess();
-	}, [id]);
+
+		checkDownloadAccess();
+	}, [productId]);
 
 	useEffect(() => {
 		const fetchProductAndRelated = async () => {
 			try {
-				const res = await axios.get(`/products/${id}`);
+				const res = await axios.get(`/products/${productId}`);
 				const prod = res.data;
 				setProduct(prod);
 
@@ -83,7 +88,7 @@ const ProductDetailPage = () => {
 		};
 
 		fetchProductAndRelated();
-	}, [id]);
+	}, [productId]);
 
 	if (loading) {
 		return (
@@ -114,9 +119,8 @@ const ProductDetailPage = () => {
 		toast.success(`${product.title} added to cart!`);
 	};
 
-	const token = localStorage.getItem(`purchase_${product.id}`);
-
-	localStorage.setItem(`purchase_${product.id}`, token);
+	const tokenMap = JSON.parse(localStorage.getItem("purchaseTokens") || "{}");
+	const token = tokenMap[productId];
 
 	return (
 		<Box sx={{ px: { xs: 2, md: 6 }, py: 5, bgcolor: "#f9f9f9" }}>
@@ -237,18 +241,38 @@ const ProductDetailPage = () => {
 
 				{/* Plan File */}
 				{tabIndex === 1 && product.plan_file && (
-					<Button
-						variant='outlined'
-						component={canDownload ? "a" : undefined}
-						href={
-							canDownload
-								? `/products/${product.id}/download?token=${token}`
-								: undefined
-						}
-						disabled={!canDownload}
-					>
-						{canDownload ? "Download Plan File" : "Buy to Download"}
-					</Button>
+					<Box>
+						<Button
+							variant='contained'
+							color='primary'
+							component='a'
+							href={
+								downloadable && product.status === "active"
+									? `http://localhost:5000/api/products/${product.id}/download?token=${token}`
+									: undefined
+							}
+							disabled={!downloadable || product.status === "inactive"}
+							sx={{ mt: 2 }}
+						>
+							{product.status === "inactive"
+								? "Unavailable"
+								: downloadable
+								? "Download Plan File"
+								: "Purchase to Download"}
+						</Button>
+
+						{(!downloadable || product.status === "inactive") && (
+							<Typography
+								variant='caption'
+								color='text.secondary'
+								sx={{ mt: 1, display: "block" }}
+							>
+								{product.status === "inactive"
+									? "This plan is unavailable for download."
+									: "You must purchase this plan to unlock the download."}
+							</Typography>
+						)}
+					</Box>
 				)}
 
 				{/* Specifications */}

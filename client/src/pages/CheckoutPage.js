@@ -35,6 +35,7 @@ const CheckoutPage = () => {
 		customer_phone: "",
 		shipping_address: "",
 		payment_method: "mpesa",
+		mpesa_code: "",
 	});
 
 	const [errors, setErrors] = useState({});
@@ -75,23 +76,37 @@ const CheckoutPage = () => {
 		setLoading(true);
 		setError("");
 
-		try {
-			const res = await axios.post("/payments/stk-push", {
-				phone: form.customer_phone,
-				amount: total,
-				products: cart.map((i) => i.id), // Send product IDs
-			});
+		if (!form.mpesa_code || form.mpesa_code.length < 10) {
+			setError("Please enter a valid M-Pesa confirmation code.");
+			setLoading(false);
+			return;
+		}
 
-			if (res.data.success) {
-				clearCart();
-				alert("Payment request sent. Check your phone to complete payment.");
-				navigate("/"); // Or show success page
-			} else {
-				setError("Failed to initiate payment.");
+		try {
+			const tokenMap = JSON.parse(
+				localStorage.getItem("purchaseTokens") || "{}"
+			);
+
+			for (const item of cart) {
+				const res = await axios.post("/purchases", {
+					product_id: item.id,
+					phone: form.customer_phone,
+					amount: item.price,
+					external_id: form.mpesa_code,
+				});
+				tokenMap[item.id] = res.data.token;
 			}
+
+			localStorage.setItem("purchaseTokens", JSON.stringify(tokenMap));
+
+			clearCart();
+			alert(
+				"✅ Payment recorded successfully. You can now download your plan(s)."
+			);
+			navigate("/");
 		} catch (err) {
-			console.error("STK push failed:", err);
-			setError("Payment request failed. Please try again.");
+			console.error("❌ Failed to create purchase:", err);
+			setError("Failed to record payment. Please check the details.");
 		} finally {
 			setLoading(false);
 		}
@@ -105,6 +120,12 @@ const CheckoutPage = () => {
 			<Typography variant='h4' gutterBottom fontWeight={600}>
 				🔒 Secure Checkout
 			</Typography>
+
+			<Alert severity='info' sx={{ mb: 3 }}>
+				<strong>Payment Instructions:</strong> Send the total amount to{" "}
+				<strong>0717 365839</strong> via M-Pesa. Then enter the M-Pesa
+				confirmation code in the field below (e.g., <em>TG893J2NU7</em>).
+			</Alert>
 
 			<Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
 				{error && (
@@ -148,6 +169,21 @@ const CheckoutPage = () => {
 							helperText={errors.customer_phone}
 						/>
 					</Grid>
+					<Grid item xs={12}>
+						<TextField
+							name='mpesa_code'
+							label='M-Pesa Confirmation Code'
+							fullWidth
+							value={form.mpesa_code}
+							onChange={handleChange}
+							required
+						/>
+						<Typography variant='caption' color='text.secondary'>
+							After sending payment via M-Pesa, enter the confirmation code here
+							(e.g., TG893J2NU7).
+						</Typography>
+					</Grid>
+
 					{/*<Grid item xs={12}>
 						<TextField
 							name='shipping_address'

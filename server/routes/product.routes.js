@@ -34,9 +34,6 @@ router.put(
 );
 router.delete("/:id", authenticate, controller.deleteProduct);
 
-router.get("/:id/download", (req, res) => {
-	const { token } = req.query;
-	return productController.downloadPlan(req, res);
-});
+router.get("/:id/download", controller.downloadPlan);
 
 module.exports = router;
