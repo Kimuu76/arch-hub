@@ -26,7 +26,7 @@ import axios from "../api/axios";
 //import { useParams } from "react-router-dom";
 import { useCart } from "../pages/CartContext";
 
-const BACKEND_BASE_URL = "http://localhost:5000";
+const BACKEND_BASE_URL = "https://arch-hub-server.onrender.com";
 
 const ProductDetailPage = () => {
 	const { id: productId } = useParams();
@@ -248,7 +248,7 @@ const ProductDetailPage = () => {
 							component='a'
 							href={
 								downloadable && product.status === "active"
-									? `http://localhost:5000/api/products/${product.id}/download?token=${token}`
+									? `https://arch-hub-server.onrender.com/api/products/${product.id}/download?token=${token}`
 									: undefined
 							}
 							disabled={!downloadable || product.status === "inactive"}

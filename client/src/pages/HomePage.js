@@ -10,6 +10,10 @@ import {
 	Select,
 	MenuItem,
 	Box,
+	Drawer,
+	List,
+	ListItem,
+	ListItemText,
 	InputLabel,
 	FormControl,
 	Button,
@@ -20,8 +24,14 @@ import {
 	Fab,
 	Zoom,
 	useScrollTrigger,
+	useMediaQuery,
+	AppBar,
+	Toolbar,
+	IconButton,
+	Dra,
 } from "@mui/material";
 import { Link } from "react-router-dom";
+import MenuIcon from "@mui/icons-material/Menu";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { Carousel } from "react-responsive-carousel";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
@@ -29,8 +39,9 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { getAllProducts, getAllCategories } from "../api/productApi";
 import { useCart } from "../pages/CartContext";
 import ProductCard from "../components/ProductCard";
+import AboutSection from "../components/AboutSection";
 
-const BACKEND_BASE_URL = "http://localhost:5000";
+const BACKEND_BASE_URL = "https://arch-hub-server.onrender.com";
 const itemsPerLoad = 8;
 
 const ScrollTop = () => {
@@ -73,6 +84,49 @@ const HomePage = () => {
 	const theme = useTheme();
 	const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 	const observerRef = useRef();
+
+	const HomeRef = useRef(null);
+	const filtersRef = useRef(null);
+	const productsRef = useRef(null);
+	const aboutRef = useRef(null);
+
+	const sectionRefs = {
+		Home: HomeRef,
+		filters: filtersRef,
+		products: productsRef,
+		about: aboutRef,
+	};
+
+	const [drawerOpen, setDrawerOpen] = useState(false);
+	const [activeSection, setActiveSection] = useState("hero");
+
+	const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+	const scrollToSection = (key) => {
+		setDrawerOpen(false);
+		if (sectionRefs[key]?.current) {
+			window.scrollTo({
+				top: sectionRefs[key].current.offsetTop - 70,
+				behavior: "smooth",
+			});
+		}
+	};
+
+	// Track active section on scroll
+	useEffect(() => {
+		const handleScroll = () => {
+			const scrollPosition = window.scrollY + 100;
+			let current = "hero";
+			for (const [key, ref] of Object.entries(sectionRefs)) {
+				if (ref.current && scrollPosition >= ref.current.offsetTop) {
+					current = key;
+				}
+			}
+			setActiveSection(current);
+		};
+		window.addEventListener("scroll", handleScroll);
+		return () => window.removeEventListener("scroll", handleScroll);
+	}, []);
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -134,6 +188,59 @@ const HomePage = () => {
 
 	return (
 		<Box sx={{ px: { xs: 2, md: 6 }, py: 4, bgcolor: "#f9f9f9" }}>
+			{/* Header Navigation Links */}
+			<AppBar position='sticky' color='inherit' elevation={2}>
+				<Toolbar sx={{ justifyContent: "space-between" }}>
+					<Typography variant='h6' color='primary' fontWeight={700}>
+						ArchiManfe
+					</Typography>
+
+					{isMobile ? (
+						<>
+							<IconButton edge='end' onClick={() => setDrawerOpen(true)}>
+								<MenuIcon />
+							</IconButton>
+							<Drawer
+								anchor='right'
+								open={drawerOpen}
+								onClose={() => setDrawerOpen(false)}
+							>
+								<List sx={{ width: 200 }}>
+									{["hero", "filters", "products", "about"].map((section) => (
+										<ListItem
+											button
+											key={section}
+											onClick={() => scrollToSection(section)}
+											selected={activeSection === section}
+										>
+											<ListItemText
+												primary={
+													section.charAt(0).toUpperCase() + section.slice(1)
+												}
+											/>
+										</ListItem>
+									))}
+								</List>
+							</Drawer>
+						</>
+					) : (
+						<Box sx={{ display: "flex", gap: 2 }}>
+							{["Home", "filters", "products", "about"].map((section) => (
+								<Button
+									key={section}
+									onClick={() => scrollToSection(section)}
+									color={activeSection === section ? "primary" : "inherit"}
+									variant={activeSection === section ? "contained" : "text"}
+									sx={{ fontWeight: 600, textTransform: "none" }}
+								>
+									{section.charAt(0).toUpperCase() + section.slice(1)}
+								</Button>
+							))}
+						</Box>
+					)}
+				</Toolbar>
+			</AppBar>
+
 			{/* Cart */}
 			<Box display='flex' justifyContent='flex-end' mb={2}>
 				<Button
@@ -153,9 +260,10 @@ const HomePage = () => {
 
 			{/* Combined Hero Section with CTA + Carousel */}
 			<Box
+				ref={HomeRef}
 				sx={{
 					minHeight: { xs: 500, md: 600 },
-					background: `linear-gradient(to right, rgba(0,0,0,0.6), rgba(0,0,0,0.3)), url(/hero.jpg) center/cover no-repeat`,
+					background: `linear-gradient(to right, rgba(0, 0, 0, 0.6), rgba(0,0,0,0.3)), url(/hero.jpg) center/cover no-repeat`,
 					color: "#fff",
 					display: "flex",
 					flexDirection: "column",
@@ -186,7 +294,7 @@ const HomePage = () => {
 					to='/shop'
 					sx={{ mb: 4 }}
 				>
-					🛒 Browse Designs
+					Browse Designs
 				</Button>
 
 				{/* Featured Carousel */}
@@ -269,6 +377,7 @@ const HomePage = () => {
 
 			{/* Filters */}
 			<Box
+				ref={filtersRef}
 				sx={{
 					position: "sticky",
 					top: 0,
@@ -363,7 +472,7 @@ const HomePage = () => {
 					</Box>
 				))
 			) : (
-				<Grid container spacing={3}>
+				<Grid ref={productsRef} container spacing={3}>
 					{visibleProducts.map((product) => (
 						<Grid item xs={12} sm={6} md={4} key={product.id}>
 							<ProductCard product={product} />
@@ -372,32 +481,10 @@ const HomePage = () => {
 				</Grid>
 			)}
 
-			{/* About / Contact Section */}
-			<Box
-				sx={{
-					mt: 8,
-					p: 4,
-					textAlign: "center",
-					bgcolor: "#e3f2fd",
-					borderRadius: 3,
-				}}
-			>
-				<Typography variant='h5' fontWeight={700}>
-					About ArchiManfe
-				</Typography>
-				<Typography mt={1}>
-					"I'm passionate about empowering families to build affordable homes
-					with smart, ready-to-build plans. ArchiManfe started from a simple
-					mission: to make architecture more accessible."
-				</Typography>
-				<Typography mt={2}>
-					📞 WhatsApp:{" "}
-					<a href='https://wa.me/254717365839' target='_blank' rel='noreferrer'>
-						254717365839
-					</a>{" "}
-					| ✉️ Email: info@archimanfe.com
-				</Typography>
-			</Box>
+			{/* About Section */}
+			<div ref={aboutRef}>
+				<AboutSection />
+			</div>
 
 			{/* Infinite Scroll Observer */}
 			{!loading && visibleCount < filtered.length && (

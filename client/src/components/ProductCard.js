@@ -20,7 +20,7 @@ import { toast } from "react-toastify";
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import { useCart } from "../pages/CartContext";
 
-const BACKEND_BASE_URL = "http://localhost:5000";
+const BACKEND_BASE_URL = "https://arch-hub-server.onrender.com";
 
 const ProductCard = ({ product }) => {
 	const theme = useTheme();

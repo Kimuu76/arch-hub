@@ -3,7 +3,7 @@
 import axios from "axios";
 
 const instance = axios.create({
-	baseURL: "http://localhost:5000/api",
+	baseURL: "https://arch-hub-server.onrender.com/api",
 });
 
 instance.interceptors.request.use((config) => {
