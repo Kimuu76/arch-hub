@@ -1,6 +1,6 @@
 /** @format */
 
-import React, { useState } from "react";
+import React from "react";
 import {
 	Box,
 	Button,
@@ -9,15 +9,14 @@ import {
 	Typography,
 	Rating,
 	useTheme,
-	Tooltip,
 } from "@mui/material";
 import { Link } from "react-router-dom";
 import HotelIcon from "@mui/icons-material/Hotel";
 import BathtubIcon from "@mui/icons-material/Bathtub";
 import StairsIcon from "@mui/icons-material/Stairs";
 import StraightenIcon from "@mui/icons-material/Straighten";
-import { toast } from "react-toastify";
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
+import { toast } from "react-toastify";
 import { useCart } from "../pages/CartContext";
 
 const BACKEND_BASE_URL = "https://arch-hub-server.onrender.com";
@@ -25,7 +24,6 @@ const BACKEND_BASE_URL = "https://arch-hub-server.onrender.com";
 const ProductCard = ({ product }) => {
 	const theme = useTheme();
 	const { dispatch } = useCart();
-	const [hovered, setHovered] = useState(false);
 
 	const handleAddToCart = () => {
 		dispatch({
@@ -42,11 +40,6 @@ const ProductCard = ({ product }) => {
 	};
 
 	const ratingValue = product.rating || 4.5;
-
-	const imageToShow =
-		hovered && product.plan_file
-			? `${BACKEND_BASE_URL}${product.plan_file}`
-			: `${BACKEND_BASE_URL}${product.image}`;
 
 	return (
 		<Box
@@ -65,8 +58,6 @@ const ProductCard = ({ product }) => {
 					boxShadow: 6,
 				},
 			}}
-			onMouseEnter={() => setHovered(true)}
-			onMouseLeave={() => setHovered(false)}
 		>
 			{/* Best Seller Badge */}
 			{product.featured && (
@@ -110,46 +101,19 @@ const ProductCard = ({ product }) => {
 				</Box>
 			)}
 
-			{/* Product Image or Plan File Preview */}
-			<Box sx={{ height: 220, borderRadius: 2, overflow: "hidden", mb: 2 }}>
-				{hovered && product.plan_file ? (
-					product.plan_file.endsWith(".pdf") ? (
-						<iframe
-							src={`${BACKEND_BASE_URL}${product.plan_file}`}
-							title='Plan PDF Preview'
-							style={{
-								width: "100%",
-								height: "100%",
-								border: "none",
-							}}
-						/>
-					) : (
-						<CardMedia
-							component='img'
-							image={`${BACKEND_BASE_URL}${product.plan_file}`}
-							alt='Plan Image'
-							sx={{
-								height: "100%",
-								width: "100%",
-								objectFit: "cover",
-								borderRadius: 2,
-							}}
-						/>
-					)
-				) : (
-					<CardMedia
-						component='img'
-						image={`${BACKEND_BASE_URL}${product.image}`}
-						alt={product.title}
-						sx={{
-							height: "100%",
-							width: "100%",
-							objectFit: "cover",
-							borderRadius: 2,
-						}}
-					/>
-				)}
-			</Box>
+			{/* Main Product Image */}
+			<CardMedia
+				component='img'
+				image={`${BACKEND_BASE_URL}${product.image}`}
+				alt={product.title}
+				sx={{
+					height: 220,
+					width: "100%",
+					objectFit: "cover",
+					borderRadius: 2,
+					mb: 2,
+				}}
+			/>
 
 			{/* Title */}
 			<Typography variant='h6' fontWeight={700} gutterBottom noWrap>
@@ -231,6 +195,53 @@ const ProductCard = ({ product }) => {
 					Quick Buy
 				</Button>
 			</Box>
+
+			{/* Plan Preview (Bottom section) */}
+			{product.plan_file && (
+				<Box sx={{ mt: 3 }}>
+					<Typography
+						variant='subtitle2'
+						fontWeight={600}
+						color='text.secondary'
+						mb={1}
+					>
+						Floor Plan Overview
+					</Typography>
+
+					<Box
+						sx={{
+							border: "1px solid #ccc",
+							borderRadius: 2,
+							overflow: "hidden",
+							height: 160,
+							width: "100%",
+						}}
+					>
+						{product.plan_file.endsWith(".pdf") ? (
+							<iframe
+								src={`${BACKEND_BASE_URL}${product.plan_file}`}
+								title='Plan PDF Preview'
+								style={{
+									width: "100%",
+									height: "100%",
+									border: "none",
+								}}
+							/>
+						) : (
+							<CardMedia
+								component='img'
+								image={`${BACKEND_BASE_URL}${product.plan_file}`}
+								alt='Plan Image Preview'
+								sx={{
+									height: "100%",
+									width: "100%",
+									objectFit: "cover",
+								}}
+							/>
+						)}
+					</Box>
+				</Box>
+			)}
 		</Box>
 	);
 };
