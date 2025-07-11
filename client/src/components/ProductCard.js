@@ -112,16 +112,30 @@ const ProductCard = ({ product }) => {
 
 			{/* Product Image or Plan File Preview */}
 			<Box sx={{ height: 220, borderRadius: 2, overflow: "hidden", mb: 2 }}>
-				{hovered && product.plan_file?.endsWith(".pdf") ? (
-					<iframe
-						src={`${BACKEND_BASE_URL}${product.plan_file}`}
-						title='Plan Preview'
-						style={{
-							width: "100%",
-							height: "100%",
-							border: "none",
-						}}
-					/>
+				{hovered && product.plan_file ? (
+					product.plan_file.endsWith(".pdf") ? (
+						<iframe
+							src={`${BACKEND_BASE_URL}${product.plan_file}`}
+							title='Plan PDF Preview'
+							style={{
+								width: "100%",
+								height: "100%",
+								border: "none",
+							}}
+						/>
+					) : (
+						<CardMedia
+							component='img'
+							image={`${BACKEND_BASE_URL}${product.plan_file}`}
+							alt='Plan Image'
+							sx={{
+								height: "100%",
+								width: "100%",
+								objectFit: "cover",
+								borderRadius: 2,
+							}}
+						/>
+					)
 				) : (
 					<CardMedia
 						component='img'
