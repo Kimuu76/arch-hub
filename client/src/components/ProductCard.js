@@ -214,7 +214,7 @@ const ProductCard = ({ product }) => {
 					disabled={product.status === "inactive"}
 					startIcon={<AddShoppingCartIcon />}
 				>
-					Cart
+					Quick Buy
 				</Button>
 			</Box>
 		</Box>
