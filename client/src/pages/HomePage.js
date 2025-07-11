@@ -206,7 +206,7 @@ const HomePage = () => {
 								onClose={() => setDrawerOpen(false)}
 							>
 								<List sx={{ width: 200 }}>
-									{["hero", "filters", "products", "about"].map((section) => (
+									{["Home", "filters", "products", "about"].map((section) => (
 										<ListItem
 											button
 											key={section}
