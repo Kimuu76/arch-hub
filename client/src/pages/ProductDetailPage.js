@@ -258,20 +258,26 @@ const ProductDetailPage = () => {
 								? "Unavailable"
 								: downloadable
 								? "Download Plan File"
-								: "Purchase to Download"}
+								: "Awaiting Approval"}
 						</Button>
 
-						{(!downloadable || product.status === "inactive") && (
-							<Typography
-								variant='caption'
-								color='text.secondary'
-								sx={{ mt: 1, display: "block" }}
-							>
-								{product.status === "inactive"
-									? "This plan is unavailable for download."
-									: "You must purchase this plan to unlock the download."}
-							</Typography>
-						)}
+						<Typography
+							variant='caption'
+							color={
+								product.status === "inactive"
+									? "error.main"
+									: !downloadable
+									? "warning.main"
+									: "text.secondary"
+							}
+							sx={{ mt: 1, display: "block" }}
+						>
+							{product.status === "inactive"
+								? "This plan is currently inactive and not available for download."
+								: !downloadable
+								? "Your payment was received. You’ll be able to download the plan once it is approved by the admin."
+								: "Click above to download your plan."}
+						</Typography>
 					</Box>
 				)}
 

@@ -87,3 +87,18 @@ exports.getAdminStats = async (req, res) => {
 		res.status(500).json({ error: "Failed to load dashboard stats" });
 	}
 };
+
+exports.approvePurchase = async (req, res) => {
+	try {
+		const pool = await poolPromise;
+		await pool
+			.request()
+			.input("id", req.params.id)
+			.query("UPDATE Purchases SET status='approved' WHERE id=@id");
+
+		res.status(200).json({ message: "Purchase approved" });
+	} catch (err) {
+		console.error("Approval error:", err);
+		res.status(500).json({ error: "Failed to approve purchase" });
+	}
+};

@@ -33,7 +33,7 @@ const AboutSection = () => {
 			>
 				<InfoOutlinedIcon color='primary' fontSize='large' />
 				<Typography variant='h4' fontWeight={800}>
-					About ArchiManfe
+					About AMF Home Designs
 				</Typography>
 			</Stack>
 

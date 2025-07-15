@@ -205,7 +205,7 @@ const ProductCard = ({ product }) => {
 						color='text.secondary'
 						mb={1}
 					>
-						Floor Plan Overview
+						Overview
 					</Typography>
 
 					<Box

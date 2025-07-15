@@ -191,9 +191,20 @@ const HomePage = () => {
 			{/* Header Navigation Links */}
 			<AppBar position='sticky' color='inherit' elevation={2}>
 				<Toolbar sx={{ justifyContent: "space-between" }}>
-					<Typography variant='h6' color='primary' fontWeight={700}>
-						ArchiManfe
-					</Typography>
+					<Box display='flex' alignItems='center' gap={1}>
+						<img
+							src='/amf.jpeg'
+							alt='AMF Logo'
+							style={{
+								height: 32,
+								width: 32,
+								objectFit: "contain",
+							}}
+						/>
+						<Typography variant='h6' color='primary' fontWeight={700}>
+							AMF Home Designs
+						</Typography>
+					</Box>
 
 					{isMobile ? (
 						<>
