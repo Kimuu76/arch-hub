@@ -102,3 +102,18 @@ exports.approvePurchase = async (req, res) => {
 		res.status(500).json({ error: "Failed to approve purchase" });
 	}
 };
+
+exports.rejectPurchase = async (req, res) => {
+	try {
+		const pool = await poolPromise;
+		await pool
+			.request()
+			.input("id", req.params.id)
+			.query("UPDATE Purchases SET status='rejected' WHERE id=@id");
+
+		res.status(200).json({ message: "Purchase rejected" });
+	} catch (err) {
+		console.error("Rejection error:", err.message);
+		res.status(500).json({ error: "Failed to reject purchase" });
+	}
+};
