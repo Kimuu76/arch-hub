@@ -13,10 +13,12 @@ import {
 	Skeleton,
 	Button,
 	useTheme,
+	Stack,
 } from "@mui/material";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "../api/axios";
 import ProductCard from "../components/ProductCard";
+import { useCurrency } from "../context/CurrencyContext";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -31,6 +33,8 @@ const ProductList = () => {
 
 	const observerRef = useRef();
 	const theme = useTheme();
+
+	const { currency, rate, toggleCurrency } = useCurrency();
 
 	useEffect(() => {
 		loadData();
@@ -80,13 +84,24 @@ const ProductList = () => {
 
 	return (
 		<Box sx={{ px: { xs: 2, md: 6 }, py: 4, bgcolor: "#f9f9f9" }}>
-			<Button onClick={() => navigate(-1)} sx={{ mb: 3 }}>
-				← Back
-			</Button>
-			{/* Title */}
-			<Typography variant='h4' fontWeight={700} textAlign='center' mb={3}>
-				Browse All Architectural Plans
-			</Typography>
+			<Stack
+				direction={{ xs: "column", sm: "row" }}
+				justifyContent='space-between'
+				alignItems={{ xs: "flex-start", sm: "center" }}
+				spacing={2}
+				mb={3}
+			>
+				<Button onClick={() => navigate(-1)} sx={{ mb: 3 }}>
+					← Back
+				</Button>
+				{/* Title */}
+				<Typography variant='h4' fontWeight={700} textAlign='center' mb={3}>
+					Browse All Architectural Plans
+				</Typography>
+				<Button variant='contained' onClick={toggleCurrency}>
+					Switch to {currency === "KES" ? "USD" : "KES"}
+				</Button>
+			</Stack>
 
 			{/* Filters */}
 			<Box

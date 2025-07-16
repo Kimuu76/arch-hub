@@ -1,33 +1,38 @@
 /** @format */
 
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import {
 	Box,
 	Typography,
 	Button,
 	Card,
 	CardMedia,
-	CardContent,
 	CardActions,
 	Grid,
 	IconButton,
 	Divider,
 	Paper,
 	Fade,
+	Stack,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import ShoppingCartCheckoutIcon from "@mui/icons-material/ShoppingCartCheckout";
+import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import { useCart } from "../pages/CartContext";
-import { Link } from "react-router-dom";
+import { useCurrency } from "../context/CurrencyContext";
 
 const BACKEND_BASE_URL = "https://arch-hub-server.onrender.com";
 
 const CartPage = () => {
 	const { cart, dispatch } = useCart();
+	const { currency, rate, toggleCurrency } = useCurrency();
 	const navigate = useNavigate();
+
+	const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+	const convertedTotal = total * rate;
 
 	const handleRemove = (id) => dispatch({ type: "REMOVE_ITEM", payload: id });
 	const handleClear = () => dispatch({ type: "CLEAR_CART" });
@@ -36,22 +41,41 @@ const CartPage = () => {
 	const handleDecreaseQty = (id) =>
 		dispatch({ type: "DECREASE_QUANTITY", payload: id });
 
-	const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+	// Auto redirect if cart is empty
+	useEffect(() => {
+		if (cart.length === 0) {
+			const timer = setTimeout(() => navigate("/"), 3000);
+			return () => clearTimeout(timer);
+		}
+	}, [cart, navigate]);
 
+	// Empty cart UI
 	if (cart.length === 0) {
 		return (
-			<Box p={4} textAlign='center'>
+			<Box
+				p={4}
+				textAlign='center'
+				display='flex'
+				flexDirection='column'
+				alignItems='center'
+				justifyContent='center'
+				minHeight='60vh'
+			>
+				<ShoppingCartOutlinedIcon sx={{ fontSize: 80, color: "gray", mb: 2 }} />
 				<Typography variant='h5' gutterBottom>
-					🛒 Your cart is empty.
+					Your cart is currently empty.
+				</Typography>
+				<Typography variant='body2' color='text.secondary'>
+					Redirecting to product list...
 				</Typography>
 				<Button
 					component={Link}
 					to='/'
 					variant='contained'
 					size='large'
-					sx={{ mt: 2 }}
+					sx={{ mt: 3 }}
 				>
-					Browse Products
+					Browse Products Now
 				</Button>
 			</Box>
 		);
@@ -59,12 +83,23 @@ const CartPage = () => {
 
 	return (
 		<Box sx={{ px: { xs: 2, md: 6 }, py: 4 }}>
-			<Button variant='outlined' onClick={() => navigate(-1)} sx={{ mb: 3 }}>
-				← Back
-			</Button>
-			<Typography variant='h4' fontWeight={700} gutterBottom>
-				My Cart
-			</Typography>
+			<Stack
+				direction={{ xs: "column", sm: "row" }}
+				justifyContent='space-between'
+				alignItems={{ xs: "flex-start", sm: "center" }}
+				spacing={2}
+				mb={3}
+			>
+				<Button variant='outlined' onClick={() => navigate(-1)}>
+					← Continue Shopping
+				</Button>
+				<Typography variant='h4' fontWeight={700}>
+					My Cart
+				</Typography>
+				<Button variant='contained' onClick={toggleCurrency}>
+					Switch to {currency === "KES" ? "USD" : "KES"}
+				</Button>
+			</Stack>
 
 			<Grid container spacing={4}>
 				{/* Cart Items */}
@@ -98,7 +133,12 @@ const CartPage = () => {
 										<Box sx={{ flexGrow: 1 }}>
 											<Typography variant='h6'>{item.name}</Typography>
 											<Typography color='text.secondary' fontSize={14}>
-												KES {item.price.toLocaleString()} each
+												{(item.price * rate).toLocaleString(undefined, {
+													style: "currency",
+													currency,
+													minimumFractionDigits: 2,
+												})}{" "}
+												each
 											</Typography>
 
 											<Box display='flex' alignItems='center' mt={1}>
@@ -161,7 +201,11 @@ const CartPage = () => {
 								Total Price
 							</Typography>
 							<Typography variant='subtitle1' fontWeight={600}>
-								KES {total.toLocaleString()}
+								{convertedTotal.toLocaleString(undefined, {
+									style: "currency",
+									currency,
+									minimumFractionDigits: 2,
+								})}
 							</Typography>
 						</Box>
 

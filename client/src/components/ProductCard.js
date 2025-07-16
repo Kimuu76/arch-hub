@@ -15,9 +15,12 @@ import HotelIcon from "@mui/icons-material/Hotel";
 import BathtubIcon from "@mui/icons-material/Bathtub";
 import StairsIcon from "@mui/icons-material/Stairs";
 import StraightenIcon from "@mui/icons-material/Straighten";
+import CropSquareIcon from "@mui/icons-material/CropSquare";
+import AspectRatioIcon from "@mui/icons-material/AspectRatio";
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import { toast } from "react-toastify";
 import { useCart } from "../pages/CartContext";
+import { useCurrency } from "../context/CurrencyContext";
 
 const BACKEND_BASE_URL = "https://arch-hub-server.onrender.com";
 
@@ -40,6 +43,8 @@ const ProductCard = ({ product }) => {
 	};
 
 	const ratingValue = product.rating || 4.5;
+
+	const { currency, rate } = useCurrency();
 
 	return (
 		<Box
@@ -120,9 +125,18 @@ const ProductCard = ({ product }) => {
 				{product.title}
 			</Typography>
 
-			{/* Price */}
+			{/* Price 
 			<Typography variant='subtitle2' color='text.secondary'>
 				From KES {product.price.toLocaleString()}
+			</Typography>*/}
+
+			<Typography variant='subtitle2' color='text.secondary'>
+				From
+				{(product.price * rate).toLocaleString(undefined, {
+					style: "currency",
+					currency,
+					minimumFractionDigits: 2,
+				})}
 			</Typography>
 
 			{/* Rating */}
@@ -165,7 +179,7 @@ const ProductCard = ({ product }) => {
 
 				<Grid item xs={6}>
 					<Box display='flex' alignItems='center' gap={1}>
-						<StraightenIcon sx={{ fontSize: 22 }} color='action' />
+						<AspectRatioIcon sx={{ fontSize: 22 }} color='action' />
 						<Typography variant='caption'>
 							{product.plot_size || "N/A"}
 						</Typography>
@@ -215,8 +229,25 @@ const ProductCard = ({ product }) => {
 							overflow: "hidden",
 							height: 160,
 							width: "100%",
+							position: "relative",
 						}}
+						className='no-print no-save'
+						onContextMenu={(e) => e.preventDefault()}
 					>
+						{/* Overlay to block iframe during print */}
+						<Box
+							sx={{
+								position: "absolute",
+								top: 0,
+								left: 0,
+								width: "100%",
+								height: "100%",
+								bgcolor: "rgba(255,255,255,0)", // Invisible but blocks interaction
+								zIndex: 2,
+							}}
+							className='overlay-blocker'
+						/>
+
 						{product.plan_file.endsWith(".pdf") ? (
 							<iframe
 								src={`${BACKEND_BASE_URL}${product.plan_file}`}
@@ -225,6 +256,7 @@ const ProductCard = ({ product }) => {
 									width: "100%",
 									height: "100%",
 									border: "none",
+									zIndex: 1,
 								}}
 							/>
 						) : (
@@ -236,6 +268,7 @@ const ProductCard = ({ product }) => {
 									height: "100%",
 									width: "100%",
 									objectFit: "cover",
+									zIndex: 1,
 								}}
 							/>
 						)}

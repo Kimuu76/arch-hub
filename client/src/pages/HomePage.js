@@ -40,8 +40,10 @@ import { getAllProducts, getAllCategories } from "../api/productApi";
 import { useCart } from "../pages/CartContext";
 import ProductCard from "../components/ProductCard";
 import AboutSection from "../components/AboutSection";
+import { useCurrency } from "../context/CurrencyContext";
 
 const BACKEND_BASE_URL = "https://arch-hub-server.onrender.com";
+//const BACKEND_BASE_URL = "http://localhost:5000";
 const itemsPerLoad = 8;
 
 const ScrollTop = () => {
@@ -89,6 +91,8 @@ const HomePage = () => {
 	const filtersRef = useRef(null);
 	const productsRef = useRef(null);
 	const aboutRef = useRef(null);
+
+	const { currency, rate, toggleCurrency } = useCurrency();
 
 	const sectionRefs = {
 		Home: HomeRef,
@@ -196,12 +200,12 @@ const HomePage = () => {
 							src='/amf.jpeg'
 							alt='AMF Logo'
 							style={{
-								height: 32,
-								width: 32,
+								height: 60,
+								width: 60,
 								objectFit: "contain",
 							}}
 						/>
-						<Typography variant='h6' color='primary' fontWeight={700}>
+						<Typography variant='h6' color='primary' fontWeight={600}>
 							AMF Home Designs
 						</Typography>
 					</Box>
@@ -247,12 +251,26 @@ const HomePage = () => {
 									{section.charAt(0).toUpperCase() + section.slice(1)}
 								</Button>
 							))}
+							<Button variant='contained' onClick={toggleCurrency}>
+								Switch to {currency === "KES" ? "USD" : "KES"}
+							</Button>
+							<Button
+								variant='contained'
+								color='primary'
+								component={Link}
+								to='/cart'
+								startIcon={
+									<Badge badgeContent={totalItems} color='error'>
+										<ShoppingCartIcon />
+									</Badge>
+								}
+							></Button>
 						</Box>
 					)}
 				</Toolbar>
 			</AppBar>
 
-			{/* Cart */}
+			{/* Cart 
 			<Box display='flex' justifyContent='flex-end' mb={2}>
 				<Button
 					variant='contained'
@@ -267,87 +285,122 @@ const HomePage = () => {
 				>
 					View Cart
 				</Button>
-			</Box>
+			</Box>*/}
 
-			{/* Combined Hero Section with CTA + Carousel */}
 			<Box
 				ref={HomeRef}
 				sx={{
-					minHeight: { xs: 500, md: 600 },
-					background: `linear-gradient(to right, rgba(0, 0, 0, 0.6), rgba(0,0,0,0.3)), url(/hero.jpg) center/cover no-repeat`,
-					color: "#fff",
-					display: "flex",
-					flexDirection: "column",
-					justifyContent: "center",
-					alignItems: "center",
-					textAlign: "center",
-					borderRadius: 3,
-					p: { xs: 3, md: 6 },
+					position: "relative",
+					minHeight: { xs: 500, md: 650 },
+					width: "100%",
 					mb: 6,
+					overflow: "hidden",
+					borderRadius: 3,
 				}}
 			>
-				{/* Headline */}
-				<Typography variant='h3' fontWeight={800}>
-					Affordable, Ready-to-Build House Designs
-				</Typography>
+				{/* Full background image with overlay */}
+				<Box
+					sx={{
+						position: "absolute",
+						inset: 0,
+						backgroundImage: `linear-gradient(to bottom, rgba(0, 0, 0, 0.6), rgba(0,0,0,0.5)), url('/hero.jpg')`,
+						backgroundSize: "cover",
+						backgroundPosition: "center",
+						backgroundRepeat: "no-repeat",
+						zIndex: 1,
+					}}
+				/>
 
-				{/* Subtitle */}
-				<Typography variant='h6' mt={2} mb={3}>
-					Plans for modern living – from bungalows to villas
-				</Typography>
-
-				{/* CTA Button */}
-				<Button
-					variant='contained'
-					size='large'
-					color='secondary'
-					component={Link}
-					to='/shop'
-					sx={{ mb: 4 }}
+				{/* Foreground content overlay */}
+				<Box
+					sx={{
+						position: "relative",
+						zIndex: 2,
+						color: "#fff",
+						display: "flex",
+						flexDirection: "column",
+						justifyContent: "center",
+						alignItems: "center",
+						textAlign: "center",
+						px: 3,
+						py: { xs: 6, md: 10 },
+						height: "100%",
+					}}
 				>
-					Browse Designs
-				</Button>
+					<Typography
+						variant='h3'
+						fontWeight={800}
+						sx={{ fontFamily: "'Work Sans', sans-serif" }}
+					>
+						Affordable, Ready-to-Build House Designs
+					</Typography>
 
-				{/* Featured Carousel */}
-				{featured.length > 0 && (
-					<Box sx={{ width: "100%", maxWidth: 1000 }}>
-						<Carousel
-							showThumbs={false}
-							autoPlay
-							infiniteLoop
-							showStatus={false}
-							showArrows
-							emulateTouch
-						>
-							{featured.map((product) => (
-								<div key={product.id}>
-									<img
-										src={`${BACKEND_BASE_URL}${product.image}`}
-										alt={product.title}
-										style={{
-											height: 400,
-											objectFit: "cover",
-											width: "100%",
-											borderRadius: 8,
-										}}
-									/>
-									<p className='legend'>
-										<Link
-											to={`/product/${product.id}`}
+					<Typography
+						variant='h6'
+						mt={2}
+						mb={3}
+						sx={{ fontFamily: "'Work Sans', sans-serif" }}
+					>
+						Plans for modern living – from bungalows to villas
+					</Typography>
+
+					<Button
+						variant='contained'
+						size='large'
+						color='secondary'
+						component={Link}
+						to='/shop'
+						sx={{ mb: 4 }}
+					>
+						Browse Designs
+					</Button>
+
+					{/* Carousel */}
+					{featured.length > 0 && (
+						<Box sx={{ width: "100%", maxWidth: 1000 }}>
+							<Carousel
+								showThumbs={false}
+								autoPlay
+								infiniteLoop
+								showStatus={false}
+								showArrows
+								emulateTouch
+							>
+								{featured.map((product) => (
+									<div key={product.id}>
+										<img
+											src={`${BACKEND_BASE_URL}${product.image}`}
+											alt={product.title}
 											style={{
-												color: "#fff",
-												fontWeight: "bold",
-												textShadow: "1px 1px 2px black",
+												height: 400,
+												objectFit: "cover",
+												width: "100%",
+												borderRadius: 8,
 											}}
-										>
-											{product.title} – KES {product.price.toLocaleString()}
-										</Link>
-									</p>
-								</div>
-							))}
-						</Carousel>
-					</Box>
-				)}
+										/>
+										<p className='legend'>
+											<Link
+												to={`/product/${product.id}`}
+												style={{
+													color: "#fff",
+													fontWeight: "bold",
+													textShadow: "1px 1px 2px black",
+												}}
+											>
+												{product.title} –{" "}
+												{(product.price * rate).toLocaleString(undefined, {
+													style: "currency",
+													currency,
+													minimumFractionDigits: 2,
+												})}
+											</Link>
+										</p>
+									</div>
+								))}
+							</Carousel>
+						</Box>
+					)}
+				</Box>
 			</Box>
 
 			{/* Banner */}

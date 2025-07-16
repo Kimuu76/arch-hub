@@ -14,6 +14,7 @@ import {
 	RadioGroup,
 	FormControlLabel,
 	Radio,
+	Stack,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -21,10 +22,20 @@ import { useCart } from "../pages/CartContext";
 import axios from "../api/axios";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
+import { useCurrency } from "../context/CurrencyContext";
+import { toast } from "react-toastify";
 
 const CheckoutPage = () => {
 	const { cart, dispatch } = useCart();
 	const navigate = useNavigate();
+	const [downloadLinks, setDownloadLinks] = useState([]);
+
+	const { currency, rate, toggleCurrency } = useCurrency();
+	const totalKES = cart.reduce(
+		(sum, item) => sum + item.price * item.quantity,
+		0
+	);
+	const totalConverted = totalKES * rate;
 
 	const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 	const clearCart = () => dispatch({ type: "CLEAR_CART" });
@@ -41,24 +52,6 @@ const CheckoutPage = () => {
 	const [errors, setErrors] = useState({});
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
-
-	/*const validate = () => {
-		let temp = {};
-		temp.customer_name = form.customer_name ? "" : "Name is required";
-		temp.customer_email = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.customer_email)
-			? ""
-			: "Enter a valid email";
-		temp.customer_phone = /^2547\d{8}$/.test(form.customer_phone)
-			? ""
-			: "Use format: 2547XXXXXXXX";
-		temp.shipping_address = form.shipping_address ? "" : "Address is required";
-		setErrors(temp);
-		return Object.values(temp).every((x) => x === "");
-	};
-
-	useEffect(() => {
-		validate();
-	}, [form]);*/
 
 	if (cart.length === 0) {
 		return (
@@ -87,6 +80,8 @@ const CheckoutPage = () => {
 				localStorage.getItem("purchaseTokens") || "{}"
 			);
 
+			const downloads = [];
+
 			for (const item of cart) {
 				const res = await axios.post("/purchases", {
 					product_id: item.id,
@@ -94,16 +89,32 @@ const CheckoutPage = () => {
 					amount: item.price,
 					external_id: form.mpesa_code,
 				});
+
 				tokenMap[item.id] = res.data.token;
+
+				downloads.push({
+					id: item.id,
+					title: item.name,
+					token: res.data.token,
+				});
 			}
 
 			localStorage.setItem("purchaseTokens", JSON.stringify(tokenMap));
 
 			clearCart();
-			alert(
-				"✅ Payment recorded successfully. You can now download your plan(s)."
+
+			toast.success(
+				" Payment recorded Successfull! Redirecting to download page...",
+				{
+					autoClose: 3000,
+					position: "top-center",
+				}
 			);
-			navigate("/");
+
+			// Delay before redirecting
+			setTimeout(() => {
+				navigate("/success", { state: { downloads } });
+			}, 1500);
 		} catch (err) {
 			console.error("❌ Failed to create purchase:", err);
 			setError("Failed to record payment. Please check the details.");
@@ -114,12 +125,23 @@ const CheckoutPage = () => {
 
 	return (
 		<Box sx={{ px: { xs: 2, md: 6 }, py: 4 }}>
-			<Button variant='outlined' onClick={() => navigate(-1)} sx={{ mb: 3 }}>
-				← Back
-			</Button>
-			<Typography variant='h4' gutterBottom fontWeight={600}>
-				🔒 Secure Checkout
-			</Typography>
+			<Stack
+				direction={{ xs: "column", sm: "row" }}
+				justifyContent='space-between'
+				alignItems={{ xs: "flex-start", sm: "center" }}
+				spacing={2}
+				mb={3}
+			>
+				<Button variant='outlined' onClick={() => navigate(-1)} sx={{ mb: 3 }}>
+					← Back
+				</Button>
+				<Typography variant='h4' gutterBottom fontWeight={600}>
+					🔒 Secure Checkout
+				</Typography>
+				<Button variant='contained' onClick={toggleCurrency}>
+					Switch to {currency === "KES" ? "USD" : "KES"}
+				</Button>
+			</Stack>
 
 			<Alert severity='info' sx={{ mb: 3 }}>
 				<strong>Payment Instructions:</strong> Send the total amount to{" "}
@@ -184,20 +206,6 @@ const CheckoutPage = () => {
 						</Typography>
 					</Grid>
 
-					{/*<Grid item xs={12}>
-						<TextField
-							name='shipping_address'
-							label='Shipping Address'
-							fullWidth
-							multiline
-							minRows={3}
-							onChange={handleChange}
-							value={form.shipping_address}
-							error={!!errors.shipping_address}
-							helperText={errors.shipping_address}
-						/>
-					</Grid>*/}
-
 					<Grid item xs={12}>
 						<FormControl component='fieldset'>
 							<FormLabel component='legend'>Payment Method</FormLabel>
@@ -216,15 +224,6 @@ const CheckoutPage = () => {
 										</Box>
 									}
 								/>
-								{/*<FormControlLabel
-									value='card'
-									control={<Radio />}
-									label={
-										<Box display='flex' alignItems='center'>
-											<CreditCardIcon sx={{ mr: 0.5 }} /> Credit / Debit Card
-										</Box>
-									}
-								/>*/}
 							</RadioGroup>
 						</FormControl>
 					</Grid>
@@ -239,11 +238,12 @@ const CheckoutPage = () => {
 					alignItems={{ xs: "flex-start", sm: "center" }}
 					gap={2}
 				>
-					<Typography variant='h6' fontWeight={600}>
-						Total:{" "}
-						<span style={{ color: "#1976d2" }}>
-							KES {total.toLocaleString()}
-						</span>
+					<Typography variant='h6'>
+						Total:
+						{totalConverted.toLocaleString(undefined, {
+							style: "currency",
+							currency,
+						})}
 					</Typography>
 
 					<Button
@@ -257,6 +257,34 @@ const CheckoutPage = () => {
 					</Button>
 				</Box>
 			</Paper>
+			{downloadLinks.length > 0 && (
+				<Box mt={4}>
+					<Alert severity='success' sx={{ mb: 2 }}>
+						✅ Payment recorded successfully. You can now download your
+						purchased plan(s).
+					</Alert>
+
+					<Grid container spacing={2}>
+						{downloadLinks.map((item) => (
+							<Grid item xs={12} sm={6} md={4} key={item.id}>
+								<Paper sx={{ p: 2 }}>
+									<Typography fontWeight={600}>{item.title}</Typography>
+									<Button
+										variant='contained'
+										fullWidth
+										color='secondary'
+										sx={{ mt: 1 }}
+										href={`http://localhost:5000/api/products/${item.id}/download?token=${item.token}`}
+										download
+									>
+										Download Plan
+									</Button>
+								</Paper>
+							</Grid>
+						))}
+					</Grid>
+				</Box>
+			)}
 		</Box>
 	);
 };
