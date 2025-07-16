@@ -198,7 +198,7 @@ const HomePage = () => {
 				<Toolbar sx={{ justifyContent: "space-between" }}>
 					<Box display='flex' alignItems='center' gap={1}>
 						<img
-							src='/amf.jpeg'
+							src='/amf1.jpeg'
 							alt='AMF Logo'
 							style={{
 								height: 60,
