@@ -113,7 +113,7 @@ const ProductManager = () => {
 			head: [["Title", "Price", "Category", "Status"]],
 			body: filteredProducts.map((p) => [
 				p.title,
-				`KES ${p.price}`,
+				`$ ${p.price}`,
 				p.category_name,
 				p.status ?? "active",
 			]),
@@ -248,7 +248,7 @@ const ProductManager = () => {
 											)}
 										</TableCell>
 										<TableCell>{product.title}</TableCell>
-										<TableCell>KES {product.price}</TableCell>
+										<TableCell>$ {product.price}</TableCell>
 										<TableCell>{product.category_name}</TableCell>
 										<TableCell>
 											<Switch
