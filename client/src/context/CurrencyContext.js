@@ -6,18 +6,20 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 const CurrencyContext = createContext();
 
 export const CurrencyProvider = ({ children }) => {
-	const [currency, setCurrency] = useState("KES");
-	const [rate, setRate] = useState(1); // 1 KES = 1 KES
-	const USD_RATE = 0.0077; // e.g. 1 KES = 0.0077 USD
+	// Set default currency to USD
+	const [currency, setCurrency] = useState("USD");
+
+	// Conversion rate: 1 USD = 130 KES (example rate)
+	const KES_RATE = 129.21;
+	const [rate, setRate] = useState(1); // Base is USD
 
 	useEffect(() => {
-		// In a real app, fetch from an API or backend
-		if (currency === "USD") setRate(USD_RATE);
-		else setRate(1);
+		if (currency === "USD") setRate(1); // no conversion
+		else if (currency === "KES") setRate(KES_RATE);
 	}, [currency]);
 
 	const toggleCurrency = () => {
-		setCurrency((prev) => (prev === "KES" ? "USD" : "KES"));
+		setCurrency((prev) => (prev === "USD" ? "KES" : "USD"));
 	};
 
 	return (

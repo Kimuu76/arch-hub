@@ -252,7 +252,9 @@ const HomePage = () => {
 								</Button>
 							))}
 							<Button variant='contained' onClick={toggleCurrency}>
-								Switch to {currency === "KES" ? "USD" : "KES"}
+								{loading
+									? "Converting..."
+									: `Switch to ${currency === "USD" ? "KES" : "USD"}`}
 							</Button>
 							<Button
 								variant='contained'
