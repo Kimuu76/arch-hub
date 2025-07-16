@@ -29,6 +29,7 @@ import {
 	Toolbar,
 	IconButton,
 	Dra,
+	Divider,
 } from "@mui/material";
 import { Link } from "react-router-dom";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -212,30 +213,77 @@ const HomePage = () => {
 
 					{isMobile ? (
 						<>
-							<IconButton edge='end' onClick={() => setDrawerOpen(true)}>
-								<MenuIcon />
-							</IconButton>
+							<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+								<Button
+									variant='contained'
+									color='primary'
+									component={Link}
+									to='/cart'
+									sx={{ minWidth: 40, p: 1 }}
+								>
+									<Badge badgeContent={totalItems} color='error'>
+										<ShoppingCartIcon />
+									</Badge>
+								</Button>
+
+								<IconButton edge='end' onClick={() => setDrawerOpen(true)}>
+									<MenuIcon fontSize='large' />
+								</IconButton>
+							</Box>
+
 							<Drawer
 								anchor='right'
 								open={drawerOpen}
 								onClose={() => setDrawerOpen(false)}
+								PaperProps={{
+									sx: {
+										width: 250,
+										p: 2,
+										display: "flex",
+										flexDirection: "column",
+										height: "100%",
+									},
+								}}
 							>
-								<List sx={{ width: 200 }}>
-									{["Home", "filters", "products", "about"].map((section) => (
-										<ListItem
-											button
-											key={section}
-											onClick={() => scrollToSection(section)}
-											selected={activeSection === section}
-										>
-											<ListItemText
-												primary={
-													section.charAt(0).toUpperCase() + section.slice(1)
-												}
-											/>
-										</ListItem>
-									))}
-								</List>
+								<Box sx={{ flexGrow: 1 }}>
+									<Typography variant='h6' fontWeight={700} mb={2}>
+										Menu
+									</Typography>
+									<List>
+										{["Home", "filters", "products", "about"].map((section) => (
+											<ListItem
+												button
+												key={section}
+												onClick={() => {
+													scrollToSection(section);
+													setDrawerOpen(false);
+												}}
+												selected={activeSection === section}
+											>
+												<ListItemText
+													primary={
+														section.charAt(0).toUpperCase() + section.slice(1)
+													}
+												/>
+											</ListItem>
+										))}
+									</List>
+								</Box>
+
+								<Divider sx={{ my: 2 }} />
+
+								<Button
+									variant='outlined'
+									fullWidth
+									onClick={() => {
+										toggleCurrency();
+										setDrawerOpen(false);
+									}}
+								>
+									{loading
+										? "Converting..."
+										: `Switch to ${currency === "USD" ? "KES" : "USD"}`}
+								</Button>
 							</Drawer>
 						</>
 					) : (
