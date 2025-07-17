@@ -25,6 +25,7 @@ import { toast } from "react-toastify";
 import axios from "../api/axios";
 //import { useParams } from "react-router-dom";
 import { useCart } from "../pages/CartContext";
+import { useCurrency } from "../context/CurrencyContext";
 
 const BACKEND_BASE_URL = "https://arch-hub-server.onrender.com";
 
@@ -39,6 +40,8 @@ const ProductDetailPage = () => {
 
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+	const { currency, rate, toggleCurrency } = useCurrency();
 
 	const [product, setProduct] = useState(null);
 	const [relatedProducts, setRelatedProducts] = useState([]);
@@ -188,7 +191,11 @@ const ProductDetailPage = () => {
 						fontWeight={600}
 						sx={{ mb: 2 }}
 					>
-						KES {product.price.toLocaleString()}
+						{(product.price * rate).toLocaleString(undefined, {
+							style: "currency",
+							currency,
+							minimumFractionDigits: 2,
+						})}
 					</Typography>
 
 					<Typography variant='body1' sx={{ mb: 3 }}>
@@ -355,7 +362,11 @@ const ProductDetailPage = () => {
 											{p.title}
 										</Typography>
 										<Typography variant='body2' color='text.secondary'>
-											KES {p.price.toLocaleString()}
+											{(product.price * rate).toLocaleString(undefined, {
+												style: "currency",
+												currency,
+												minimumFractionDigits: 2,
+											})}
 										</Typography>
 									</CardContent>
 								</Card>
