@@ -23,7 +23,6 @@ import "react-responsive-carousel/lib/styles/carousel.min.css";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { toast } from "react-toastify";
 import axios from "../api/axios";
-//import { useParams } from "react-router-dom";
 import { useCart } from "../pages/CartContext";
 import { useCurrency } from "../context/CurrencyContext";
 
@@ -36,7 +35,7 @@ const ProductDetailPage = () => {
 	const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
 	const [hasPurchased, setHasPurchased] = useState(false);
-	const [user, setUser] = useState(null); // Optional: replace with your auth system
+	const [user, setUser] = useState(null);
 
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -47,7 +46,6 @@ const ProductDetailPage = () => {
 	const [relatedProducts, setRelatedProducts] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [tabIndex, setTabIndex] = useState(0);
-
 	const [downloadable, setDownloadable] = useState(false);
 
 	useEffect(() => {
@@ -149,7 +147,7 @@ const ProductDetailPage = () => {
 			</Button>
 
 			<Grid container spacing={5}>
-				{/* Images */}
+				{/* Image Carousel */}
 				<Grid item xs={12} md={6}>
 					<Paper elevation={3} sx={{ borderRadius: 3, p: 1 }}>
 						<Carousel
@@ -159,17 +157,28 @@ const ProductDetailPage = () => {
 							showStatus={false}
 							showArrows
 							emulateTouch
+							swipeable
+							dynamicHeight={false}
 						>
 							{(product.images?.length ? product.images : [product.image]).map(
 								(img, i) => (
-									<div key={i}>
+									<div
+										key={i}
+										style={{
+											height: 450,
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											backgroundColor: "#f9f9f9",
+										}}
+									>
 										<img
 											src={`${BACKEND_BASE_URL}${img}`}
 											alt={`${product.title} ${i + 1}`}
 											style={{
-												maxHeight: 450,
-												objectFit: "cover",
-												width: "100%",
+												maxHeight: "100%",
+												maxWidth: "100%",
+												objectFit: "contain",
 											}}
 										/>
 									</div>
@@ -179,153 +188,166 @@ const ProductDetailPage = () => {
 					</Paper>
 				</Grid>
 
-				{/* Product Info */}
+				{/* Scrollable Product Details */}
 				<Grid item xs={12} md={6}>
-					<Typography variant='h4' fontWeight={700} gutterBottom>
-						{product.title}
-					</Typography>
-
-					<Typography
-						variant='h5'
-						color='primary'
-						fontWeight={600}
-						sx={{ mb: 2 }}
+					<Paper
+						elevation={3}
+						sx={{
+							borderRadius: 3,
+							p: 3,
+							maxHeight: 550,
+							overflowY: "auto",
+							scrollbarWidth: "thin",
+							scrollbarColor: "#ccc transparent",
+						}}
 					>
-						{(product.price * rate).toLocaleString(undefined, {
-							style: "currency",
-							currency,
-							minimumFractionDigits: 2,
-						})}
-					</Typography>
-
-					<Typography variant='body1' sx={{ mb: 3 }}>
-						{product.short_description || product.description?.slice(0, 200)}
-					</Typography>
-
-					<Button
-						variant='contained'
-						color='primary'
-						onClick={handleAddToCart}
-						sx={{ px: 4, py: 1.2, fontWeight: 600 }}
-						disabled={product.status === "inactive"}
-					>
-						{product.status === "inactive" ? "Unavailable" : "Add to Cart"}
-					</Button>
-
-					{product.status === "inactive" && (
-						<Typography variant='body2' color='error' mt={2}>
-							This product is currently inactive and cannot be added to the
-							cart.
+						<Typography variant='h4' fontWeight={700} gutterBottom>
+							{product.title}
 						</Typography>
-					)}
-				</Grid>
-			</Grid>
 
-			{/* Tabs Section */}
-			<Box mt={6}>
-				<Tabs
-					value={tabIndex}
-					onChange={(e, val) => setTabIndex(val)}
-					indicatorColor='primary'
-					textColor='primary'
-					variant='scrollable'
-					scrollButtons='auto'
-				>
-					<Tab label='Overview' />
-					{product.plan_file && <Tab label='Plan File' />}
-					<Tab label='Specifications' />
-					<Tab label='Reviews' />
-				</Tabs>
+						<Typography
+							variant='h5'
+							color='primary'
+							fontWeight={600}
+							sx={{ mb: 2 }}
+						>
+							{(product.price * rate).toLocaleString(undefined, {
+								style: "currency",
+								currency,
+								minimumFractionDigits: 2,
+							})}
+						</Typography>
 
-				<Divider sx={{ my: 2 }} />
+						<Typography variant='body1' sx={{ mb: 3 }}>
+							{product.short_description || product.description?.slice(0, 200)}
+						</Typography>
 
-				{/* Overview */}
-				{tabIndex === 0 && (
-					<Typography variant='body1' sx={{ lineHeight: 1.8 }}>
-						{product.description}
-					</Typography>
-				)}
-
-				{/* Plan File */}
-				{tabIndex === 1 && product.plan_file && (
-					<Box>
 						<Button
 							variant='contained'
 							color='primary'
-							component='a'
-							href={
-								downloadable && product.status === "active"
-									? `https://arch-hub-server.onrender.com/api/products/${product.id}/download?token=${token}`
-									: undefined
-							}
-							disabled={!downloadable || product.status === "inactive"}
-							sx={{ mt: 2 }}
+							onClick={handleAddToCart}
+							sx={{ px: 4, py: 1.2, fontWeight: 600 }}
+							disabled={product.status === "inactive"}
 						>
-							{product.status === "inactive"
-								? "Unavailable"
-								: downloadable
-								? "Download Plan File"
-								: "Awaiting Approval"}
+							{product.status === "inactive" ? "Unavailable" : "Add to Cart"}
 						</Button>
 
-						<Typography
-							variant='caption'
-							color={
-								product.status === "inactive"
-									? "error.main"
-									: !downloadable
-									? "warning.main"
-									: "text.secondary"
-							}
-							sx={{ mt: 1, display: "block" }}
-						>
-							{product.status === "inactive"
-								? "This plan is currently inactive and not available for download."
-								: !downloadable
-								? "Your payment was received. You’ll be able to download the plan once it is approved by the admin."
-								: "Click above to download your plan."}
-						</Typography>
-					</Box>
-				)}
+						{product.status === "inactive" && (
+							<Typography variant='body2' color='error' mt={2}>
+								This product is currently inactive and cannot be added to the
+								cart.
+							</Typography>
+						)}
 
-				{/* Specifications */}
-				{tabIndex === 2 && (
-					<Grid container spacing={2}>
-						<Grid item xs={12} sm={6}>
-							<Typography>
-								<strong>Bedrooms:</strong> {product.bedrooms || "N/A"}
-							</Typography>
-							<Typography>
-								<strong>Bathrooms:</strong> {product.bathrooms || "N/A"}
-							</Typography>
-							<Typography>
-								<strong>Stories:</strong> {product.stories || "N/A"}
-							</Typography>
-							<Typography>
-								<strong>Category:</strong> {product.category_name || "N/A"}
-							</Typography>
-						</Grid>
-						<Grid item xs={12} sm={6}>
-							<Typography>
-								<strong>Plot Size:</strong> {product.plot_size || "N/A"}
-							</Typography>
-							<Typography>
-								<strong>Roof Type:</strong> {product.roof_type || "N/A"}
-							</Typography>
-							<Typography>
-								<strong>Style:</strong> {product.style || "N/A"}
-							</Typography>
-						</Grid>
-					</Grid>
-				)}
+						{/* Tabs Section */}
+						<Box mt={4}>
+							<Tabs
+								value={tabIndex}
+								onChange={(e, val) => setTabIndex(val)}
+								indicatorColor='primary'
+								textColor='primary'
+								variant='scrollable'
+								scrollButtons='auto'
+							>
+								<Tab label='Overview' />
+								{product.plan_file && <Tab label='Plan File' />}
+								<Tab label='Specifications' />
+								<Tab label='Reviews' />
+							</Tabs>
 
-				{/* Reviews Placeholder */}
-				{tabIndex === 3 && (
-					<Typography variant='body2' color='text.secondary'>
-						Reviews feature coming soon!
-					</Typography>
-				)}
-			</Box>
+							<Divider sx={{ my: 2 }} />
+
+							{/* Overview */}
+							{tabIndex === 0 && (
+								<Typography variant='body1' sx={{ lineHeight: 1.8 }}>
+									{product.description}
+								</Typography>
+							)}
+
+							{/* Plan File */}
+							{tabIndex === 1 && product.plan_file && (
+								<Box>
+									<Button
+										variant='contained'
+										color='primary'
+										component='a'
+										href={
+											downloadable && product.status === "active"
+												? `https://arch-hub-server.onrender.com/api/products/${product.id}/download?token=${token}`
+												: undefined
+										}
+										disabled={!downloadable || product.status === "inactive"}
+										sx={{ mt: 2 }}
+									>
+										{product.status === "inactive"
+											? "Unavailable"
+											: downloadable
+											? "Download Plan File"
+											: "Awaiting Approval"}
+									</Button>
+
+									<Typography
+										variant='caption'
+										color={
+											product.status === "inactive"
+												? "error.main"
+												: !downloadable
+												? "warning.main"
+												: "text.secondary"
+										}
+										sx={{ mt: 1, display: "block" }}
+									>
+										{product.status === "inactive"
+											? "This plan is currently inactive and not available for download."
+											: !downloadable
+											? "Your payment was received. You’ll be able to download the plan once it is approved by the admin."
+											: "Click above to download your plan."}
+									</Typography>
+								</Box>
+							)}
+
+							{/* Specifications */}
+							{tabIndex === 2 && (
+								<Grid container spacing={2}>
+									<Grid item xs={12} sm={6}>
+										<Typography>
+											<strong>Bedrooms:</strong> {product.bedrooms || "N/A"}
+										</Typography>
+										<Typography>
+											<strong>Bathrooms:</strong> {product.bathrooms || "N/A"}
+										</Typography>
+										<Typography>
+											<strong>Stories:</strong> {product.stories || "N/A"}
+										</Typography>
+										<Typography>
+											<strong>Category:</strong>{" "}
+											{product.category_name || "N/A"}
+										</Typography>
+									</Grid>
+									<Grid item xs={12} sm={6}>
+										<Typography>
+											<strong>Plot Size:</strong> {product.plot_size || "N/A"}
+										</Typography>
+										<Typography>
+											<strong>Roof Type:</strong> {product.roof_type || "N/A"}
+										</Typography>
+										<Typography>
+											<strong>Style:</strong> {product.style || "N/A"}
+										</Typography>
+									</Grid>
+								</Grid>
+							)}
+
+							{/* Reviews */}
+							{tabIndex === 3 && (
+								<Typography variant='body2' color='text.secondary'>
+									Reviews feature coming soon!
+								</Typography>
+							)}
+						</Box>
+					</Paper>
+				</Grid>
+			</Grid>
 
 			{/* Related Products */}
 			{relatedProducts.length > 0 && (
@@ -362,7 +384,7 @@ const ProductDetailPage = () => {
 											{p.title}
 										</Typography>
 										<Typography variant='body2' color='text.secondary'>
-											{(product.price * rate).toLocaleString(undefined, {
+											{(p.price * rate).toLocaleString(undefined, {
 												style: "currency",
 												currency,
 												minimumFractionDigits: 2,
