@@ -1,37 +1,42 @@
 /** @format */
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Box, Typography, Button, IconButton } from "@mui/material";
 import { Link } from "react-router-dom";
 import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
 
 const BACKEND_BASE_URL = "https://arch-hub-server.onrender.com";
 
-const HeroCarousel = ({ featured = [], rate, currency, HomeRef }) => {
+const HeroCarousel = ({
+	featured = [],
+	rate = 1,
+	currency = "USD",
+	HomeRef,
+}) => {
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const intervalRef = useRef(null);
 	const isHovered = useRef(false);
 
-	const startAutoPlay = () => {
+	const startAutoPlay = useCallback(() => {
+		if (intervalRef.current) return; // avoid double intervals
 		intervalRef.current = setInterval(() => {
 			if (!isHovered.current) {
 				setCurrentIndex((prev) => (prev + 1) % featured.length);
 			}
 		}, 5000);
-	};
+	}, [featured.length]);
 
-	const stopAutoPlay = () => {
+	const stopAutoPlay = useCallback(() => {
 		clearInterval(intervalRef.current);
-	};
+		intervalRef.current = null;
+	}, []);
 
 	useEffect(() => {
-		if (featured.length > 0) startAutoPlay();
+		if (featured.length > 0) {
+			startAutoPlay();
+		}
 		return () => stopAutoPlay();
-	}, [featured]);
-
-	if (!featured || featured.length === 0) return null;
-
-	const currentProduct = featured[currentIndex];
+	}, [featured.length, startAutoPlay, stopAutoPlay]);
 
 	const handlePrev = () => {
 		setCurrentIndex((prev) => (prev === 0 ? featured.length - 1 : prev - 1));
@@ -41,9 +46,12 @@ const HeroCarousel = ({ featured = [], rate, currency, HomeRef }) => {
 		setCurrentIndex((prev) => (prev + 1) % featured.length);
 	};
 
+	if (!featured.length) return null;
+
+	const currentProduct = featured[currentIndex];
+
 	return (
 		<Box
-			ref={HomeRef}
 			mt={2}
 			onMouseEnter={() => (isHovered.current = true)}
 			onMouseLeave={() => (isHovered.current = false)}
@@ -70,7 +78,6 @@ const HeroCarousel = ({ featured = [], rate, currency, HomeRef }) => {
 				py: { xs: 6, md: 10 },
 			}}
 		>
-			{/* Main Text */}
 			<Typography
 				variant='h3'
 				fontWeight={800}
@@ -99,7 +106,6 @@ const HeroCarousel = ({ featured = [], rate, currency, HomeRef }) => {
 				Browse Designs
 			</Button>
 
-			{/* Product Info at Bottom */}
 			{currentProduct && (
 				<Box
 					sx={{
@@ -130,7 +136,6 @@ const HeroCarousel = ({ featured = [], rate, currency, HomeRef }) => {
 				</Box>
 			)}
 
-			{/* Manual Controls */}
 			<IconButton
 				onClick={handlePrev}
 				sx={{
