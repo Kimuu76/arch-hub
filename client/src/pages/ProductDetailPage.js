@@ -143,7 +143,7 @@ const ProductDetailPage = () => {
 			</Stack>
 			{/* Title */}
 			<Typography variant='h4' fontWeight={700} textAlign='center' mb={3}>
-				Product Details & Plans
+				Product Details & PDF File
 			</Typography>
 			{/* Cart Button */}
 			<Box display='flex' justifyContent='flex-end' mb={2} spacing={2} gap={1}>
@@ -272,7 +272,7 @@ const ProductDetailPage = () => {
 								scrollButtons='auto'
 							>
 								<Tab label='Overview' />
-								{product.plan_file && <Tab label='Plan File' />}
+								{product.plan_file && <Tab label='PDF File' />}
 								<Tab label='Specifications' />
 								<Tab label='Reviews' />
 							</Tabs>
