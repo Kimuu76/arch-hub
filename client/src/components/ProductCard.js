@@ -50,17 +50,18 @@ const ProductCard = ({ product }) => {
 		<Box
 			sx={{
 				bgcolor: "#fff",
-				borderRadius: 3,
-				boxShadow: 3,
-				p: 2,
+				borderRadius: 2,
+				boxShadow: 2,
+				p: 1.5,
 				position: "relative",
 				height: "100%",
+				width: 325,
 				display: "flex",
 				flexDirection: "column",
 				transition: "transform 0.3s, box-shadow 0.3s",
 				"&:hover": {
-					transform: "translateY(-5px)",
-					boxShadow: 6,
+					transform: "translateY(-4px)",
+					boxShadow: 4,
 				},
 			}}
 		>
@@ -112,7 +113,7 @@ const ProductCard = ({ product }) => {
 				image={`${BACKEND_BASE_URL}${product.image}`}
 				alt={product.title}
 				sx={{
-					height: 220,
+					height: 180,
 					width: "100%",
 					objectFit: "cover",
 					borderRadius: 2,

@@ -207,7 +207,7 @@ const HomePage = () => {
 				<Toolbar sx={{ justifyContent: "space-between" }}>
 					<Box display='flex' alignItems='center' gap={1} sx={{ mb: 2 }}>
 						<img
-							src='/amf1.jpeg'
+							src='/logo.svg'
 							alt='AMF Logo'
 							style={{
 								height: 80,
@@ -487,7 +487,7 @@ const HomePage = () => {
 			) : (
 				<Grid ref={productsRef} container spacing={3}>
 					{visibleProducts.map((product) => (
-						<Grid item xs={12} sm={6} md={4} key={product.id}>
+						<Grid item xs={12} sm={6} md={3} key={product.id}>
 							<ProductCard product={product} />
 						</Grid>
 					))}

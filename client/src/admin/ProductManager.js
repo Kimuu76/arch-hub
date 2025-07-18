@@ -214,6 +214,7 @@ const ProductManager = () => {
 						<Table>
 							<TableHead>
 								<TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+									<TableCell>Amf Id</TableCell>
 									<TableCell>Image</TableCell>
 									<TableCell>Plan File</TableCell>
 									<TableCell>Title</TableCell>
@@ -226,6 +227,7 @@ const ProductManager = () => {
 							<TableBody>
 								{paginatedProducts.map((product) => (
 									<TableRow key={product.id}>
+										<TableCell>{product.id}</TableCell>
 										<TableCell>
 											<img
 												src={`https://arch-hub-server.onrender.com${product.image}`}

@@ -17,6 +17,7 @@ import {
 	Badge,
 	useTheme,
 	useMediaQuery,
+	Stack,
 } from "@mui/material";
 import { Carousel } from "react-responsive-carousel";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
@@ -79,7 +80,7 @@ const ProductDetailPage = () => {
 				const relatedRes = await axios.get(`/products`);
 				const related = relatedRes.data
 					.filter((p) => p.category_id === prod.category_id && p.id !== prod.id)
-					.slice(0, 4);
+					.slice(0, 8);
 				setRelatedProducts(related);
 			} catch (err) {
 				console.error("Error:", err);
@@ -125,8 +126,27 @@ const ProductDetailPage = () => {
 
 	return (
 		<Box sx={{ px: { xs: 2, md: 6 }, py: 5, bgcolor: "#f9f9f9" }}>
+			<Stack
+				direction={{ xs: "column", sm: "row" }}
+				justifyContent='space-between'
+				alignItems={{ xs: "flex-start", sm: "center" }}
+				spacing={2}
+				mb={3}
+			>
+				<Button onClick={() => navigate(-1)} sx={{ mb: 3 }}>
+					← Back
+				</Button>
+
+				{/*<Button variant='contained' onClick={toggleCurrency}>
+					Switch to {currency === "KES" ? "USD" : "KES"}
+				</Button>*/}
+			</Stack>
+			{/* Title */}
+			<Typography variant='h4' fontWeight={700} textAlign='center' mb={3}>
+				Product Details & Plans
+			</Typography>
 			{/* Cart Button */}
-			<Box display='flex' justifyContent='flex-end' mb={2}>
+			<Box display='flex' justifyContent='flex-end' mb={2} spacing={2} gap={1}>
 				<Button
 					variant='contained'
 					color='primary'
@@ -140,16 +160,22 @@ const ProductDetailPage = () => {
 				>
 					View Cart
 				</Button>
+				<Button variant='contained' onClick={toggleCurrency}>
+					Switch to {currency === "KES" ? "USD" : "KES"}
+				</Button>
 			</Box>
 
-			<Button onClick={() => navigate(-1)} sx={{ mb: 3 }}>
-				← Back
-			</Button>
-
-			<Grid container spacing={5}>
-				{/* Image Carousel */}
-				<Grid item xs={12} md={6}>
-					<Paper elevation={3} sx={{ borderRadius: 3, p: 1 }}>
+			<Paper elevation={3} sx={{ borderRadius: 3, p: 2, width: "100%" }}>
+				<Box
+					sx={{
+						display: "flex",
+						flexDirection: { xs: "column", md: "row" },
+						alignItems: "stretch",
+						gap: 4,
+					}}
+				>
+					{/* Carousel */}
+					<Box sx={{ flex: 1, minWidth: 0 }}>
 						<Carousel
 							showThumbs={!isMobile}
 							autoPlay
@@ -185,20 +211,16 @@ const ProductDetailPage = () => {
 								)
 							)}
 						</Carousel>
-					</Paper>
-				</Grid>
+					</Box>
 
-				{/* Scrollable Product Details */}
-				<Grid item xs={12} md={6}>
-					<Paper
-						elevation={3}
+					{/* Product Info */}
+					<Box
 						sx={{
-							borderRadius: 3,
-							p: 3,
-							maxHeight: 550,
+							flex: 1,
 							overflowY: "auto",
-							scrollbarWidth: "thin",
-							scrollbarColor: "#ccc transparent",
+							maxHeight: 550,
+							display: "flex",
+							flexDirection: "column",
 						}}
 					>
 						<Typography variant='h4' fontWeight={700} gutterBottom>
@@ -226,7 +248,7 @@ const ProductDetailPage = () => {
 							variant='contained'
 							color='primary'
 							onClick={handleAddToCart}
-							sx={{ px: 4, py: 1.2, fontWeight: 600 }}
+							sx={{ px: 4, py: 1.2, fontWeight: 600, width: "fit-content" }}
 							disabled={product.status === "inactive"}
 						>
 							{product.status === "inactive" ? "Unavailable" : "Add to Cart"}
@@ -239,7 +261,7 @@ const ProductDetailPage = () => {
 							</Typography>
 						)}
 
-						{/* Tabs Section */}
+						{/* Tabs */}
 						<Box mt={4}>
 							<Tabs
 								value={tabIndex}
@@ -257,14 +279,13 @@ const ProductDetailPage = () => {
 
 							<Divider sx={{ my: 2 }} />
 
-							{/* Overview */}
+							{/* Tab Contents */}
 							{tabIndex === 0 && (
 								<Typography variant='body1' sx={{ lineHeight: 1.8 }}>
 									{product.description}
 								</Typography>
 							)}
 
-							{/* Plan File */}
 							{tabIndex === 1 && product.plan_file && (
 								<Box>
 									<Button
@@ -273,7 +294,7 @@ const ProductDetailPage = () => {
 										component='a'
 										href={
 											downloadable && product.status === "active"
-												? `https://arch-hub-server.onrender.com/api/products/${product.id}/download?token=${token}`
+												? `${BACKEND_BASE_URL}/api/products/${product.id}/download?token=${token}`
 												: undefined
 										}
 										disabled={!downloadable || product.status === "inactive"}
@@ -298,15 +319,14 @@ const ProductDetailPage = () => {
 										sx={{ mt: 1, display: "block" }}
 									>
 										{product.status === "inactive"
-											? "This plan is currently inactive and not available for download."
+											? "This plan is currently inactive."
 											: !downloadable
-											? "Your payment was received. You’ll be able to download the plan once it is approved by the admin."
+											? "Payment received. Waiting for admin approval."
 											: "Click above to download your plan."}
 									</Typography>
 								</Box>
 							)}
 
-							{/* Specifications */}
 							{tabIndex === 2 && (
 								<Grid container spacing={2}>
 									<Grid item xs={12} sm={6}>
@@ -338,63 +358,78 @@ const ProductDetailPage = () => {
 								</Grid>
 							)}
 
-							{/* Reviews */}
 							{tabIndex === 3 && (
 								<Typography variant='body2' color='text.secondary'>
 									Reviews feature coming soon!
 								</Typography>
 							)}
 						</Box>
-					</Paper>
-				</Grid>
-			</Grid>
+					</Box>
+				</Box>
+			</Paper>
 
-			{/* Related Products */}
+			{/* Related Products - Scrollable */}
 			{relatedProducts.length > 0 && (
 				<Box mt={8}>
 					<Typography variant='h5' fontWeight={600} gutterBottom>
 						You may also like
 					</Typography>
-					<Grid container spacing={3}>
+					<Box
+						sx={{
+							display: "flex",
+							overflowX: "auto",
+							whiteSpace: "nowrap",
+							gap: 2,
+							pb: 1,
+							"&::-webkit-scrollbar": {
+								height: 8,
+							},
+							"&::-webkit-scrollbar-thumb": {
+								backgroundColor: "#ccc",
+								borderRadius: 4,
+							},
+						}}
+					>
 						{relatedProducts.map((p) => (
-							<Grid item xs={12} sm={6} md={3} key={p.id}>
-								<Card
-									component={Link}
-									to={`/product/${p.id}`}
-									sx={{
-										textDecoration: "none",
-										borderRadius: 3,
-										boxShadow: 2,
-										transition: "0.3s",
-										"&:hover": {
-											transform: "scale(1.02)",
-											boxShadow: 4,
-										},
-									}}
-								>
-									<CardMedia
-										component='img'
-										height='140'
-										image={`${BACKEND_BASE_URL}${p.image}`}
-										alt={p.title}
-										sx={{ objectFit: "cover" }}
-									/>
-									<CardContent>
-										<Typography variant='subtitle1' fontWeight={600} noWrap>
-											{p.title}
-										</Typography>
-										<Typography variant='body2' color='text.secondary'>
-											{(p.price * rate).toLocaleString(undefined, {
-												style: "currency",
-												currency,
-												minimumFractionDigits: 2,
-											})}
-										</Typography>
-									</CardContent>
-								</Card>
-							</Grid>
+							<Card
+								key={p.id}
+								component={Link}
+								to={`/product/${p.id}`}
+								sx={{
+									minWidth: 240,
+									display: "inline-block",
+									textDecoration: "none",
+									borderRadius: 3,
+									boxShadow: 2,
+									transition: "0.3s",
+									"&:hover": {
+										transform: "scale(1.02)",
+										boxShadow: 4,
+									},
+								}}
+							>
+								<CardMedia
+									component='img'
+									height='140'
+									image={`${BACKEND_BASE_URL}${p.image}`}
+									alt={p.title}
+									sx={{ objectFit: "cover" }}
+								/>
+								<CardContent>
+									<Typography variant='subtitle1' fontWeight={600} noWrap>
+										{p.title}
+									</Typography>
+									<Typography variant='body2' color='text.secondary'>
+										{(p.price * rate).toLocaleString(undefined, {
+											style: "currency",
+											currency,
+											minimumFractionDigits: 2,
+										})}
+									</Typography>
+								</CardContent>
+							</Card>
 						))}
-					</Grid>
+					</Box>
 				</Box>
 			)}
 		</Box>
