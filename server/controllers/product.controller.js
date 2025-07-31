@@ -58,7 +58,7 @@ const downloadPlan = async (req, res) => {
 					font,
 					color: rgb(0.85, 0.85, 0.85),
 					opacity: 0.25,
-					rotate: degrees(-45),
+					rotate: degrees(45),
 				});
 			});
 
