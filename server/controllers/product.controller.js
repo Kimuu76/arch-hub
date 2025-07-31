@@ -6,6 +6,7 @@ const path = require("path");
 const fs = require("fs");
 const { PDFDocument, StandardFonts, rgb } = require("pdf-lib");
 const sharp = require("sharp");
+const { degrees } = require("pdf-lib");
 
 const getAllProducts = async (_, res) => {
 	const products = await productService.getAll();
@@ -49,13 +50,15 @@ const downloadPlan = async (req, res) => {
 			const pages = pdfDoc.getPages();
 			pages.forEach((page) => {
 				const { width, height } = page.getSize();
+
 				page.drawText("amfhomedesigns.com", {
-					x: width / 2 - 100,
-					y: 30,
-					size: 16,
+					x: width / 2 - 200,
+					y: height / 2,
+					size: 50,
 					font,
-					color: rgb(0.8, 0.8, 0.8),
-					opacity: 0.5,
+					color: rgb(0.85, 0.85, 0.85),
+					opacity: 0.25,
+					rotate: degrees(-45),
 				});
 			});
 
