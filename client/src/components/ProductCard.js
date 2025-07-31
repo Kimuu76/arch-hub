@@ -276,6 +276,23 @@ const ProductCard = ({ product }) => {
 					</Box>
 				</Box>
 			)}
+			{/* Product ID in top-right corner */}
+			<Box
+				sx={{
+					position: "absolute",
+					top: 12,
+					right: 12,
+					bgcolor: "rgba(0,0,0,0.7)",
+					color: "#fff",
+					px: 1,
+					py: 0.3,
+					borderRadius: 1,
+					fontSize: "0.7rem",
+					zIndex: 2,
+				}}
+			>
+				AMF: {product.id}
+			</Box>
 		</Box>
 	);
 };
